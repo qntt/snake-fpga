@@ -5,7 +5,8 @@ module vga_controller(iRST_n,
                       oVS,
                       b_data,
                       g_data,
-                      r_data,up,down,left,right);
+                      r_data,up,down,left,right,
+							 addressRow, addressCol, ADDR, boardPosition);
 							 //board);
 
 	
@@ -14,6 +15,7 @@ input iVGA_CLK;
 input up,down,left,right;
 //input [64000:0] board;
 reg [64000:0] board;
+reg [63:0] board2;
 output reg oBLANK_n;
 output reg oHS;
 output reg oVS;
@@ -21,7 +23,7 @@ output [7:0] b_data;
 output [7:0] g_data;  
 output [7:0] r_data;                        
 ///////// ////                     
-reg [18:0] ADDR;
+output reg [18:0] ADDR;
 reg [23:0] bgr_data;
 wire VGA_CLK_n;
 wire [7:0] index;
@@ -71,13 +73,19 @@ assign addressY = ADDR / 640;
 reg [19:0] count;
 */
 
-reg [31:0] addressRow, addressCol;
+output reg [31:0] addressRow, addressCol;
 //assign addressRow = ADDR / 640;
 //assign addressCol = ADDR % 640; 
+output reg [31:0] boardPosition;
+reg [31:0] boardValue;
+reg [31:0] boardRow;
+reg [31:0] boardCol;
 
 reg [7:0] index2;
 reg [7:0] color_index;
 reg isReadyToDraw;
+
+reg [31:0] boardValue2;
 
 initial begin
 	/*x_square = 10'd100;
@@ -94,6 +102,8 @@ initial begin
 	board[64000-32*(40*13+10): 64000-32*(40*13+10)-31] = 32'd1;
 	board[64000-32*(40*14+10): 64000-32*(40*14+10)-31] = 32'd1;
 	board[64000-32*(40*15+10): 64000-32*(40*15+10)-31] = 32'd1;
+	
+	board2[63:32] = 32'd1;
 end
 
 
@@ -103,39 +113,42 @@ begin
 
 	addressRow = ADDR / 640;
 	addressCol = ADDR % 640; 
-
-	reg [31:0] boardPosition, boardValue;
-	reg [31:0] boardRow;
-	reg [31:0] boardCol;
 	 
 	// check if ADDR is in the game screen (40x40 board)
 	if (addressCol < 480) begin
 		boardRow = addressRow/pixelWidth;
 		boardCol = addressCol/pixelWidth;
-		boardPosition = 40*boardRow + boardCol
-		$display("addr: %d, row: %d, col: %d, boardPos: %d",
-			ADDR, boardRow, boardCol, boardPosition);
-		if (boardPosition == 32'd410) begin
+		boardPosition = 40*boardRow + boardCol;
+		//$display("addr: %d, row: %d, col: %d, boardPos: %d",
+		//	ADDR, boardRow, boardCol, boardPosition);
+		if (boardPosition == 32'd205) begin
 			color_index = 8'd1;
 		end
-		boardValue = board[64000-32*boardPosition -: 32];
+		else begin
+			color_index = 8'd4;
+		end
+		//boardValue = board[64000-32*boardPosition -: 32];
 		//boardValue = board[64000-32*boardPosition : 64000-32*boardPosition-31];
+		boardValue [31:0] = board2[63:32];
 		
 		// snake 1 is value 1
 		// snake 2 is value 2
 		// apple is value 3
-		if (boardValue == 32'd1) begin
-			color_index = 8'd1;
+		if (boardValue === 32'd1) begin
+			color_index = 8'd2;
 		end
-end
+		else begin
+			color_index = 8'd4;
+		end
+	end
 
-// draw boundaries of board
-else if (addressCol == 480) begin
-	color_index = 8'd0;
-end
-else begin
-	color_index = 8'd4;
-end
+	// draw boundaries of board
+	else if (addressCol == 480) begin
+		color_index = 8'd0;
+	end
+	else begin
+		color_index = 8'd4;
+	end
 	
 end
 
