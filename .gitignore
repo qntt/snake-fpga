@@ -1,0 +1,7 @@
+*
+!.gitignore
+!*.v
+!*.s
+!*.mif
+
+!README.md
