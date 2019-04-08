@@ -12,7 +12,7 @@ module skeleton(resetn,
 	VGA_G,	 														//	VGA Green[9:0]
 	VGA_B,															//	VGA Blue[9:0]
 	CLOCK_50,                                          // 50 MHz clock
-	up,down,left,right);  												
+	up,down,left,right, reset);  												
 		
 	////////////////////////	VGA	////////////////////////////
 	output			VGA_CLK;   				//	VGA Clock
@@ -24,7 +24,7 @@ module skeleton(resetn,
 	output	[7:0]	VGA_G;	 				//	VGA Green[9:0]
 	output	[7:0]	VGA_B;   				//	VGA Blue[9:0]
 	input				CLOCK_50;
-	input up,down,left,right;
+	input up,down,left,right, reset;
 
 	////////////////////////	PS2	////////////////////////////
 	input 			resetn;
@@ -80,6 +80,27 @@ module skeleton(resetn,
 	assign leds = 8'b00101011;
 		
 	// VGA
+	wire [1600:0] board;
+	wire [200:0] snake1, snake2;
+	wire head1, head2;
+	wire length1, length2;
+	wire score1, score2;
+	wire stage;
+	reg isDrawing;
+	
+	integer move1, move2;
+	
+	
+	always@(*) begin
+		case({up, right, down, left})
+			4'b1000: move1 = 1;
+			4'b0100: move1 = 2;
+			4'b0010: move1 = 3;
+			4'b0001: move1 = 4;
+		endcase
+	end
+	
+	
 	Reset_Delay			r0	(.iCLK(CLOCK_50),.oRESET(DLY_RST)	);
 	VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(CLOCK_50),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
 	vga_controller vga_ins(.iRST_n(DLY_RST),
@@ -89,7 +110,24 @@ module skeleton(resetn,
 								 .oVS(VGA_VS),
 								 .b_data(VGA_B),
 								 .g_data(VGA_G),
-								 .r_data(VGA_R),.up(up),.down(down),.left(left),.right(right));
+								 .r_data(VGA_R),
+								 .board(board), 
+								 .snake1(snake1), .snake2(snake2), 
+								 .head1(head1), .head2(head2),
+								 .length1(length1), .length2(length2),
+								 .score1(score1), .score2(score2),
+								 .stage(stage), 
+								 .isDrawing(isDrawing));
+								 
+	
+	snake (.board(board), .clock(VGA_CLK), .reset(reset),
+		.snake1(snake1), .snake2(snake2),
+		.head1(head1), .head2(head2),
+		.length1(length1), .length2(length2),
+		.score1(score1), .score2(score2),
+		.stage(stage),
+		.move1(move1), .move2(move2),
+		.isDrawing(isDrawing));
 	
 	
 endmodule
