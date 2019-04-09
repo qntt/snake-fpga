@@ -86,9 +86,14 @@ module skeleton(resetn,
 	wire length1, length2;
 	wire score1, score2;
 	wire stage;
-	reg isDrawing;
+	wire isDrawing;
 	
 	integer move1, move2;
+	
+	initial begin
+		move1 = 5;
+		move2 = 5;
+	end
 	
 	
 	always@(*) begin
@@ -111,23 +116,26 @@ module skeleton(resetn,
 								 .b_data(VGA_B),
 								 .g_data(VGA_G),
 								 .r_data(VGA_R),
-								 .board(board), 
-								 .snake1(snake1), .snake2(snake2), 
-								 .head1(head1), .head2(head2),
-								 .length1(length1), .length2(length2),
-								 .score1(score1), .score2(score2),
+								 //.board(board), 
+								 //.snake1(snake1), .snake2(snake2), 
+								 //.head1(head1), .head2(head2),
+								 //.length1(length1), .length2(length2),
+								 //.score1(score1), .score2(score2),
 								 .stage(stage), 
 								 .isDrawing(isDrawing));
 								 
-	
-	snake (.board(board), .clock(VGA_CLK), .reset(reset),
-		.snake1(snake1), .snake2(snake2),
-		.head1(head1), .head2(head2),
-		.length1(length1), .length2(length2),
-		.score1(score1), .score2(score2),
-		.stage(stage),
+	snake2 s2 (.clock(~VGA_CLK), .rstage(stage), .isDrawing(isDrawing));
+
+								 
+	/*
+	snake snake1 (.rboard(board), .clock(VGA_CLK), .reset(reset),
+		.rsnake1(snake1), .rsnake2(snake2),
+		.rhead1(head1), .rhead2(head2),
+		.rlength1(length1), .rlength2(length2),
+		.rscore1(score1), .rscore2(score2),
+		.rstage(stage),
 		.move1(move1), .move2(move2),
-		.isDrawing(isDrawing));
+		.isDrawing(isDrawing));*/
 	
 	
 endmodule

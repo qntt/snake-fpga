@@ -6,11 +6,11 @@ module vga_controller(iRST_n,
                       b_data,
                       g_data,
                       r_data,
-							 board, 
-							 snake1, snake2, 
-							 head1, head2,
-							 length1, length2,
-							 score1, score2,
+							 //board, 
+							 //snake1, snake2, 
+							 //head1, head2,
+							 //length1, length2,
+							 //score1, score2,
 							 stage, 
 							 isDrawing);
 
@@ -26,12 +26,12 @@ output [7:0] r_data;
 
 
 
-input [1600:0] board;
-input [200:0] snake1, snake2;
-input head1, head2;
-input length1, length2;
-input score1, score2;
-input stage;
+//input [1600:0] board;
+//input [200:0] snake1, snake2;
+//input [31:0] head1, head2;
+//input [31:0] length1, length2;
+//input [31:0] score1, score2;
+input [31:0] stage;
 input isDrawing;
 
                    
@@ -94,9 +94,10 @@ always@(posedge iVGA_CLK)
 begin
 	
 	if (isDrawing == 1'b1) begin
-	
-		if (stage == 2) begin
-		
+		//color_index = 8'd2;
+		if (stage == 32'd2) begin
+			color_index = 8'd1;
+			/*
 			addressRow = ADDR / 640;
 			addressCol = ADDR % 640; 
 			 
@@ -127,12 +128,15 @@ begin
 			else begin
 				color_index = 8'd4;
 			end
-			
+			*/
 		end
-		else if (stage == 3) begin 
-			color_index = 8'd0;
+		else if (stage == 32'd3) begin 
+			color_index = 8'd2;
 		end
-	
+		
+	end
+	else begin
+		color_index = 8'd3;
 	end
 
 end
