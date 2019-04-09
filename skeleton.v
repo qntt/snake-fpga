@@ -108,6 +108,9 @@ module skeleton(resetn,
 	
 	Reset_Delay			r0	(.iCLK(CLOCK_50),.oRESET(DLY_RST)	);
 	VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(CLOCK_50),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
+	
+	
+	//snake2 s2 (.clock(VGA_CLK), .rstage(stage), .isDrawing(isDrawing));
 	vga_controller vga_ins(.iRST_n(DLY_RST),
 								 .iVGA_CLK(VGA_CLK),
 								 .oBLANK_n(VGA_BLANK),
@@ -115,16 +118,16 @@ module skeleton(resetn,
 								 .oVS(VGA_VS),
 								 .b_data(VGA_B),
 								 .g_data(VGA_G),
-								 .r_data(VGA_R),
+								 .r_data(VGA_R), .up(up), .down(down), .left(left), .right(right));
 								 //.board(board), 
 								 //.snake1(snake1), .snake2(snake2), 
 								 //.head1(head1), .head2(head2),
 								 //.length1(length1), .length2(length2),
 								 //.score1(score1), .score2(score2),
-								 .stage(stage), 
-								 .isDrawing(isDrawing));
+								 //.stage(stage), 
+								 //.isDrawing(isDrawing));
 								 
-	snake2 s2 (.clock(~VGA_CLK), .rstage(stage), .isDrawing(isDrawing));
+
 
 								 
 	/*

@@ -5,18 +5,19 @@ module vga_controller(iRST_n,
                       oVS,
                       b_data,
                       g_data,
-                      r_data,
+                      r_data, up, down, left, right);
 							 //board, 
 							 //snake1, snake2, 
 							 //head1, head2,
 							 //length1, length2,
 							 //score1, score2,
-							 stage, 
-							 isDrawing);
+							 //stage, 
+							 //isDrawing);
 
 	
 input iRST_n;
 input iVGA_CLK;
+input up, down, left, right;
 output reg oBLANK_n;
 output reg oHS;
 output reg oVS;
@@ -31,9 +32,6 @@ output [7:0] r_data;
 //input [31:0] head1, head2;
 //input [31:0] length1, length2;
 //input [31:0] score1, score2;
-input [31:0] stage;
-input isDrawing;
-
                    
 ///////// ////                     
 reg [18:0] ADDR;
@@ -81,10 +79,68 @@ integer boardPosition;
 integer boardValue;
 integer boardRow, boardCol;
 
+integer isDrawing;
+integer delayCounter;
+integer initialCounter;
+
+ integer board[1600:0];
+ integer snake1[200:0], snake2[200:0];
+ integer head1, head2;
+ integer length1, length2;
+ integer score1, score2;
+ integer stage;
+ 
+ integer move1;
+
+integer tail1, tail2;
+integer isCollide1; 
+
+integer snake1TailIndex;
+integer snake1HeadIndex;
+ 
 reg [7:0] color_index;
+
+integer i;
 
 initial begin
 	pixelWidth = 12;
+	delayCounter = 0;
+	initialCounter = 0;
+	move1 = 2;
+	
+	score1 = 0;
+	score2 = 0;
+	isDrawing = 0;
+	
+	stage = 2;
+	isCollide1 = 0;
+	delayCounter = 0;
+	
+	length1 = 5;
+	length2 = 5;
+	head1 = 195;
+	head2 = 0;
+	
+	
+	for (i=0; i<=1600; i=i+1) begin
+		board[i] = 0;
+	end
+	for (i=0; i<=200; i=i+1) begin
+		snake1[i] = 0;
+		snake2[i] = 0;
+	end
+	board[1600-(40*10+10)] = 1;
+	board[1600-(40*10+9)] = 1;
+	board[1600-(40*10+8)] = 1;
+	board[1600-(40*10+7)] = 1;
+	board[1600-(40*10+6)] = 1;
+	
+	snake1[195] = 40*10+10;
+	snake1[196] = 40*10+9;
+	snake1[197] = 40*10+8;
+	snake1[198] = 40*10+7;
+	snake1[199] = 40*10+6;
+	
 end
 
 
@@ -93,11 +149,8 @@ end
 always@(posedge iVGA_CLK)
 begin
 	
-	if (isDrawing == 1'b1) begin
-		//color_index = 8'd2;
-		if (stage == 32'd2) begin
-			color_index = 8'd1;
-			/*
+	if (isDrawing == 1) begin
+		if (stage == 2) begin
 			addressRow = ADDR / 640;
 			addressCol = ADDR % 640; 
 			 
@@ -107,7 +160,7 @@ begin
 				boardCol = addressCol/pixelWidth;
 				boardPosition = 40*boardRow + boardCol;
 				
-				boardValue = board[1600-boardPosition-: 32];
+				boardValue = board[1600-boardPosition];
 				
 				// snake 1 is value 1
 				// snake 2 is value 2
@@ -128,15 +181,122 @@ begin
 			else begin
 				color_index = 8'd4;
 			end
-			*/
+			
 		end
-		else if (stage == 32'd3) begin 
+		else if (stage == 3) begin 
 			color_index = 8'd2;
+		end
+		else begin
+			color_index = 8'd4;
 		end
 		
 	end
 	else begin
 		color_index = 8'd3;
+	end
+	
+	
+	if (up==1'b1) begin
+		move1 = 1;
+	end
+	else if (right==1'b1) begin
+		move1 = 2;
+	end
+	else if (down==1'b1) begin
+		move1 = 3;
+	end
+	else if (left==1'b1) begin
+		move1 = 4;
+	end
+	
+	
+	
+	
+	
+	if (delayCounter == 0) begin
+		if (stage == 2) begin
+			tail1 = head1 + length1 - 1;
+			if (tail1 >= 200) begin
+				tail1 = (tail1 - 199) - 1;
+			end
+			
+			if (head1 == 0) begin
+				head1 = 199;
+			end
+			else begin
+				head1 = head1 -1;
+			end
+			
+			// update tail in board
+			snake1TailIndex = snake1[tail1];
+			board[1600-snake1TailIndex] = 0;
+			
+			
+			if (move1 == 1) begin
+				snake1[head1] = snake1[head1] - 40;
+				if (snake1[head1] < 0) begin 
+					isCollide1 = 1;
+				end
+			end
+			else if (move1 == 2) begin
+				snake1[head1] = snake1[head1] + 1;
+				if (snake1[head1] % 40 == 0) begin 
+					isCollide1 = 1;
+				end
+			end
+			else if (move1 == 3) begin
+				snake1[head1] = snake1[head1] + 40;
+				if (snake1[head1] >= 1600) begin 
+					isCollide1 = 1;
+				end
+			end
+
+			else if (move1 == 4) begin
+				snake1[head1] = snake1[head1] -1;
+				if (snake1[head1] % 40 == 39) begin 
+					isCollide1 = 1;
+				end
+			end
+			
+
+			// check collisions
+			// currently checks if hits itself or hits the other snake
+			if (snake1[head1] == 1 || snake1[head1] == 1) begin
+				isCollide1 = 1;
+			end
+			
+			// update head in board
+			snake1HeadIndex = snake1[head1];
+			board[1600-snake1HeadIndex] = 1;
+			
+			
+			if (isCollide1==1) begin
+				//stage = 3;
+			end
+			
+		end
+		else if (stage == 3) begin
+			//if (reset==1'b1) begin
+			//	stage = 2;
+			//end
+		end
+		
+	end
+	
+	
+	
+	
+	
+	
+	
+	// delay by 1M cycles after each frame
+	if (delayCounter >= 1000000) begin
+		delayCounter = 0;
+		isDrawing = 0;
+	end
+	else begin
+		delayCounter = delayCounter + 1;
+		isDrawing = 1;
 	end
 
 end
