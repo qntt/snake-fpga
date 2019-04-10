@@ -19,8 +19,8 @@ output reg [31:0] rscore1, rscore2;
 output reg [31:0] rstage;
 output reg isDrawing;
 
- integer board[1600:0];
- integer snake1[200:0], snake2[200:0];
+ integer board[1599:0];
+ integer snake1[199:0], snake2[199:0];
  integer head1, head2;
  integer length1, length2;
  integer score1, score2;
@@ -37,14 +37,14 @@ integer initialCounter;
 integer i;
 
 initial begin
-	score1 = 32'b0;
-	score2 = 32'b0;
+	score1 = 0;
+	score2 = 0;
 	isDrawing = 1'b0;
 	
-	for (i=0; i<=1600; i=i+1) begin
-		board[i] = 1'b0;
+	for (i=0; i<=1599; i=i+1) begin
+		board[i] = 0;
 	end
-	for (i=0; i<=200; i=i+1) begin
+	for (i=0; i<=199; i=i+1) begin
 		snake1[i] = 0;
 		snake2[i] = 0;
 	end
@@ -79,8 +79,9 @@ begin
 	board[1600-(40*10+7)] = 1;
 	board[1600-(40*10+6)] = 1;*/
 
+	/*
 	if (delayCounter == 0) begin
-		/*if (stage == 2) begin
+		if (stage == 2) begin
 			tail1 = head1 + length1 - 1;
 			if (tail1 >= 200) begin
 				tail1 = (tail1 - 199) - 1;
@@ -94,9 +95,7 @@ begin
 			end
 			
 			// update tail in board
-			board[snake1[tail1]] = 0;
-
-
+			//board[snake1[199]] = 0;
 			if (move1 == 32'd1) begin
 				snake1[head1] = snake1[head1] - 40;
 				if (snake1[head1] < 0) begin 
@@ -115,14 +114,12 @@ begin
 					isCollide1 = 1'b1;
 				end
 			end
-
 			else if (move1 == 32'd4) begin
 				snake1[head1] = snake1[head1] -1;
 				if (snake1[head1] % 40 == 39) begin 
 					isCollide1 = 1'b1;
 				end
 			end
-
 			// check collisions
 			// currently checks if hits itself or hits the other snake
 			if (snake1[head1] == 1 || snake1[head1] == 1) begin
@@ -130,7 +127,7 @@ begin
 			end
 			
 			// update head in board
-			board[snake1[head1]] = 1;
+			//board[snake1[194]] = 1;
 			
 			if (isCollide1==1'b1) begin
 				//stage = 3;
@@ -142,17 +139,17 @@ begin
 				stage = 2;
 			end
 		end
-		*/
+		
 	end
-	
+	*/
 	
 	
 	// store the integer arrays into reg
 	
-	for (i=0; i<1600; i=i+1) begin
+	for (i=0; i<=1599; i=i+1) begin
 		rboard[32*(i+1)-1 -:32] = board[i];
 	end
-	for (i=0; i<200; i=i+1) begin
+	for (i=0; i<=199; i=i+1) begin
 		rsnake1[32*(i+1)-1 -:32] = snake1[i];
 		rsnake2[32*(i+1)-1 -:32] = snake2[i];
 	end
@@ -162,14 +159,12 @@ begin
 	rlength2 = length2;
 	rscore1 = score1;
 	rscore2 = score2;
-	for (i=0; i<32; i=i+1) begin
-		rstage[i] = stage[i];
-	end
+	rstage = stage;
 	
 	
 	
 	// delay by 1M cycles after each frame
-	if (delayCounter >= 1000000) begin
+	if (delayCounter >= 100000000) begin
 		delayCounter = 0;
 		isDrawing = 1'b0;
 	end

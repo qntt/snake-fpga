@@ -85,7 +85,7 @@ module skeleton(resetn,
 	wire head1, head2;
 	wire length1, length2;
 	wire score1, score2;
-	wire stage;
+	wire [31:0] stage;
 	wire isDrawing;
 	
 	integer move1, move2;
@@ -108,9 +108,6 @@ module skeleton(resetn,
 	
 	Reset_Delay			r0	(.iCLK(CLOCK_50),.oRESET(DLY_RST)	);
 	VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(CLOCK_50),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
-	
-	
-	//snake2 s2 (.clock(VGA_CLK), .rstage(stage), .isDrawing(isDrawing));
 	vga_controller vga_ins(.iRST_n(DLY_RST),
 								 .iVGA_CLK(VGA_CLK),
 								 .oBLANK_n(VGA_BLANK),
@@ -118,27 +115,26 @@ module skeleton(resetn,
 								 .oVS(VGA_VS),
 								 .b_data(VGA_B),
 								 .g_data(VGA_G),
-								 .r_data(VGA_R), .up(up), .down(down), .left(left), .right(right));
-								 //.board(board), 
-								 //.snake1(snake1), .snake2(snake2), 
-								 //.head1(head1), .head2(head2),
-								 //.length1(length1), .length2(length2),
-								 //.score1(score1), .score2(score2),
-								 //.stage(stage), 
-								 //.isDrawing(isDrawing));
+								 .r_data(VGA_R),
+								 .board(board), 
+								 .snake1(snake1), .snake2(snake2), 
+								 .head1(head1), .head2(head2),
+								 .length1(length1), .length2(length2),
+								 .score1(score1), .score2(score2),
+								 .stage(stage), 
+								 .isDrawing(isDrawing));
 								 
-
+	//snake2 s2 (.clock(~VGA_CLK), .rstage(stage), .isDrawing(isDrawing));
 
 								 
-	/*
-	snake snake1 (.rboard(board), .clock(VGA_CLK), .reset(reset),
+	
+	snake s1 (.rboard(board), .clock(VGA_CLK), .reset(reset),
 		.rsnake1(snake1), .rsnake2(snake2),
 		.rhead1(head1), .rhead2(head2),
 		.rlength1(length1), .rlength2(length2),
 		.rscore1(score1), .rscore2(score2),
 		.rstage(stage),
 		.move1(move1), .move2(move2),
-		.isDrawing(isDrawing));*/
-	
+		.isDrawing(isDrawing));
 	
 endmodule
