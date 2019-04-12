@@ -83,20 +83,20 @@ integer isDrawing;
 integer delayCounter;
 integer initialCounter;
 
- integer board[1600:0];
- integer snake1[200:0], snake2[200:0];
+ //integer board[1600:0];
+ integer snake1[49:0], snake2[49:0];
  integer head1, head2;
  integer length1, length2;
  integer score1, score2;
  integer stage;
+ integer oldHead1, oldHead2;
  
  integer move1;
 
 integer tail1, tail2;
 integer isCollide1; 
 
-integer snake1TailIndex;
-integer snake1HeadIndex;
+integer applePosition;
  
 reg [7:0] color_index;
 
@@ -108,42 +108,41 @@ initial begin
 	initialCounter = 0;
 	move1 = 2;
 	
+	applePosition = 40*10+25;
+	
 	score1 = 0;
 	score2 = 0;
 	isDrawing = 0;
 	
 	stage = 2;
 	isCollide1 = 0;
-	delayCounter = 0;
 	
-	length1 = 5;
+	length1 = 10;
 	length2 = 5;
-	head1 = 195;
+	head1 = 40;
 	head2 = 0;
 	
-	
-	for (i=0; i<=1600; i=i+1) begin
-		board[i] = 0;
-	end
-	for (i=0; i<=200; i=i+1) begin
+	for (i=0; i<=49; i=i+1) begin
 		snake1[i] = 0;
 		snake2[i] = 0;
 	end
-	board[1600-(40*10+10)] = 1;
-	board[1600-(40*10+9)] = 1;
-	board[1600-(40*10+8)] = 1;
-	board[1600-(40*10+7)] = 1;
-	board[1600-(40*10+6)] = 1;
 	
-	snake1[195] = 40*10+10;
-	snake1[196] = 40*10+9;
-	snake1[197] = 40*10+8;
-	snake1[198] = 40*10+7;
-	snake1[199] = 40*10+6;
+	snake1[40] = 40*10+15;
+	snake1[41] = 40*10+14;
+	snake1[42] = 40*10+13;
+	snake1[43] = 40*10+12;
+	snake1[44] = 40*10+11;
+	snake1[45] = 40*10+10;
+	snake1[46] = 40*10+9;
+	snake1[47] = 40*10+8;
+	snake1[48] = 40*10+7;
+	snake1[49] = 40*10+6;
 	
 end
 
-
+integer j;
+integer position1;
+reg isInImage;
 
 // process snake's movement
 always@(posedge iVGA_CLK)
@@ -160,35 +159,50 @@ begin
 				boardCol = addressCol/pixelWidth;
 				boardPosition = 40*boardRow + boardCol;
 				
-				boardValue = board[1600-boardPosition];
+				//boardValue = board[1600-boardPosition];
+				isInImage = 1'b0;
+				for (j=0; j<50; j=j+1) begin
+					if (j <= length1) begin 
+						position1 = head1 + j;
+						if (position1 >= 50) begin
+							position1 = position1-50;
+						end
+						
+						if (snake1[position1] == boardPosition) begin
+							color_index = 8'd1;
+							isInImage = 1'b1;
+						end
+					end
+				end
 				
-				// snake 1 is value 1
-				// snake 2 is value 2
-				// apple is value 3
-					
-				case({boardValue})
-					31'd1: color_index = 8'd1;
-					31'd2: color_index = 8'd2;
-					default: color_index = 8'd4;
-				endcase
+				if (boardPosition == applePosition) begin
+					color_index = 8'd3;
+					isInImage = 1'b1;
+				end
+				if (isInImage == 1'b0) begin
+					color_index = 8'd4;
+				end
+				
+				// TODO: display snake 2's positions
+				
 				
 			end
 
 			// draw boundaries of board
-			else if (addressCol == 480) begin
+			if (addressCol == 480) begin
 				color_index = 8'd0;
 			end
-			else begin
-				color_index = 8'd4;
-			end
+//			else begin
+//				color_index = 8'd4;
+//			end
 			
 		end
-		else if (stage == 3) begin 
+		if (stage == 3) begin 
 			color_index = 8'd2;
 		end
-		else begin
-			color_index = 8'd4;
-		end
+//		else begin
+//			color_index = 8'd4;
+//		end
 		
 	end
 	else begin
@@ -196,16 +210,16 @@ begin
 	end
 	
 	
-	if (up==1'b1) begin
+	if (up==1'b0 && move1 != 3) begin
 		move1 = 1;
 	end
-	else if (right==1'b1) begin
+	else if (right==1'b0 && move1 != 4) begin
 		move1 = 2;
 	end
-	else if (down==1'b1) begin
+	else if (down==1'b0 && move1 != 1) begin
 		move1 = 3;
 	end
-	else if (left==1'b1) begin
+	else if (left==1'b0 && move1 != 2) begin
 		move1 = 4;
 	end
 	
@@ -213,65 +227,89 @@ begin
 	
 	
 	
-	if (delayCounter == 0) begin
+	
+	if (delayCounter ==  0) begin
 		if (stage == 2) begin
 			tail1 = head1 + length1 - 1;
-			if (tail1 >= 200) begin
-				tail1 = (tail1 - 199) - 1;
+			if (tail1 >= 50) begin
+				tail1 = tail1 - 50;
 			end
 			
+			oldHead1 = head1;
+			
 			if (head1 == 0) begin
-				head1 = 199;
+				head1 = 49;
 			end
 			else begin
 				head1 = head1 -1;
 			end
 			
 			// update tail in board
-			snake1TailIndex = snake1[tail1];
-			board[1600-snake1TailIndex] = 0;
+			//snake1TailIndex = snake1[tail1];
+			//board[1600-snake1TailIndex] = 0;
 			
 			
 			if (move1 == 1) begin
-				snake1[head1] = snake1[head1] - 40;
+				snake1[head1] = snake1[oldHead1] - 40;
 				if (snake1[head1] < 0) begin 
 					isCollide1 = 1;
 				end
 			end
-			else if (move1 == 2) begin
-				snake1[head1] = snake1[head1] + 1;
+			if (move1 == 2) begin
+				snake1[head1] = snake1[oldHead1] + 1;
 				if (snake1[head1] % 40 == 0) begin 
 					isCollide1 = 1;
 				end
 			end
-			else if (move1 == 3) begin
-				snake1[head1] = snake1[head1] + 40;
+			if (move1 == 3) begin
+				snake1[head1] = snake1[oldHead1] + 40;
 				if (snake1[head1] >= 1600) begin 
 					isCollide1 = 1;
 				end
 			end
 
-			else if (move1 == 4) begin
-				snake1[head1] = snake1[head1] -1;
+			if (move1 == 4) begin
+				snake1[head1] = snake1[oldHead1] -1;
 				if (snake1[head1] % 40 == 39) begin 
 					isCollide1 = 1;
 				end
 			end
 			
 
-			// check collisions
-			// currently checks if hits itself or hits the other snake
-			if (snake1[head1] == 1 || snake1[head1] == 1) begin
-				isCollide1 = 1;
-			end
+//			// check collisions
+//			// currently checks if hits itself or hits the other snake
+//			if (snake1[head1] == 1 || snake1[head1] == 1) begin
+//				isCollide1 = 1;
+//			end
 			
 			// update head in board
-			snake1HeadIndex = snake1[head1];
-			board[1600-snake1HeadIndex] = 1;
+			//snake1HeadIndex = snake1[head1];
+			//board[1600-snake1HeadIndex] = 1;
+			
+			// checking collisions
+//			for (j=1; j<= 50; j=j+1) begin
+//				if (j <= length1 - 1) begin 
+//					position1 = head1 + j;
+//					if (position1 >= 50) begin
+//						position1 = position1-50;
+//					end
+//					
+//					if (snake1[position1] == snake1[head1]) begin
+//						isCollide1 = 1;
+//					end
+//					
+//				end
+//			end
+			
+			// check if snake eats apple
+			if (snake1[head1] == applePosition) begin
+				length1 = length1 + 1;
+			end
 			
 			
 			if (isCollide1==1) begin
-				//stage = 3;
+				stage = 3;
+				isCollide1 = 0;
 			end
 			
 		end
@@ -290,7 +328,7 @@ begin
 	
 	
 	// delay by 1M cycles after each frame
-	if (delayCounter >= 1000000) begin
+	if (delayCounter >= 5000000) begin
 		delayCounter = 0;
 		isDrawing = 0;
 	end
