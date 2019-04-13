@@ -1,0 +1,69 @@
+Dedicated registers
+
+# s0: stage number
+# s1: snake 1 head pointer
+# s2: snake 2 head pointer
+# s5: direction player 1
+# s6: direction player 2
+# s7: collision is true
+
+
+====================================================================================
+Board (currently not using but can be used for collision detection)
+
+board
+0...1599
+
+=======================================
+Snake arrays
+
+snake1 array rows
+1600...1649
+
+snake1 array cols
+1650...1699
+
+snake2 array rows
+1700...1749
+
+snake2 array cols
+1750...1799
+
+=======================================
+Apple(s)
+
+Apples rows
+1800...1809
+
+Apples cols
+1810...1819
+
+=======================================
+Score
+
+snake1
+1820
+
+snake2
+1821
+
+=======================================
+Length
+
+snake1
+1822
+
+snake2
+1823
+
+=======================================
+Other
+
+s0: stage number
+1824
+
+s1: snake 1 head pointer
+1825
+
+s2: snake 2 head pointer
+1826

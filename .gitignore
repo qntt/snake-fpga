@@ -3,5 +3,6 @@
 !*.v
 !*.s
 !*.mif
+!*.txt
 
 !README.md
