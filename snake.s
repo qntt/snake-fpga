@@ -1,58 +1,66 @@
 # s0: stage number
-# s1: pointer head of snake 1
-# s2: pointer head of snake 2
+# s1: snake 1 head pointer
+# s2: snake 2 head pointer
 # s5: direction player 1
 # s6: direction player 2
 
+
+
 loop:
   addi $t0, $0, 1
-  bne $s0, $t0, endstage1
+  bne $s0, $t0, endstage1		# Check the value of stage
   stage1:
     jal init
-    #jal drawStartScreen
 
   endstage1:
     addi $t0, $0, 2
     bne $s0, $t0, endloop
 
   stage2:
-    #jal drawGameBackground
     jal renderSnake
+
+
+  # delay by 5M cycles
+  addi $t0, $0, 5000
+  addi $t1, $0, 1000
+  mul $t1, $t0, $t1
+  addi $a0, $0, $t1
+  jal delay
 
   endloop:
     j loop
 
 
 init:
-  addi $t0, $0, 2000
-  # define apple locations
+  addi $t0, $0, 1800
+  # define apple locations (10,10)
   addi $t1, $0, 10
   addi $t2, $0, 10
   sw $t1, 0($t0)
-  sw $t1, 1($t0)
+  sw $t2, 10($t0)
+  
+  # initial values of snake is (20,20), (20,21), (20,22)
+  					# define the initial head of the snakes
+  addi $s1, $0, 0			# pointer of snake 1 is 0th position in array
+  addi $t0, $0, 20
+  # Define the first 5 nodes of snake 1
+  sw $t0, 1600($0)
+  sw $t0, 1650($0)
+  
+  addi $t1, $0, 21
+  sw $t0, 1601($0)
+  sw $t1, 1651($0)
 
-  addi $t1, $0, 30
-  addi $t2, $0, 20
-  sw $t1, 2($t0)
-  sw $t1, 3($t0) 
-
-  addi $t1, $0, 20
-  addi $t2, $0, 5
-  sw $t1, 4($t0)
-  sw $t1, 5($t0) 
-
-  # define the initial head of the snakes
-  addi $s1, $0, 10
-  addi $s2, $0, 10
-  addi $s3, $0, 30
-  addi $s4, $0, 10
+  addi $t1, $0, 22
+  sw $t0, 1602($0)
+  sw $t1, 1652($0)
 
   # define initial direction of snakes
   addi $s5, $0, 2
   addi $s6, $0, 2
 
   # reset the score
-  addi $t2, $0, 2400
+  addi $t2, $0, 1820
   sw $0, 0($t2)
   sw $0, 1($t2)
 
@@ -64,79 +72,128 @@ init:
 
 renderSnake:
   # length of snake 1 (t1)
-  addi $t0, $0, 2402
-  lw $t1, 0($t0)
+  lw $t1, 1822($0)
   # tail of snake 1 (t2) 
-  add $t2, $s1, $t1
-  # lower address of snake 1's body (t3)
-  # upper address of snake 1's body (t4)
-  addi $t3, $0, 2000
-  addi $t4, $0, 2199
-  # update tail if tail > upper address
-  blt $t2, $t4, skipUpdateTail1
-  sub $t2, $t2, $t4
-  add $t2, $t2, $t3
-  addi $t2, $t2, -1
+  add $t2, $s1, $t1				# tail1 = head1 + length1
+  addi $t0, $0, 1
+  sub $t2, $t2, $t0				# tail1 = tail1 - 1
+  
+  # tail may wrap over array (update if tail1 >= 50) (t2)
+  addi $t0, $0, 49
+  blt $t0, $t2, skipUpdateTail1
+  addi $t0, $0, 50
+  sub $t2, $t2, $t0				# tail1 = tail1 - 50
 
   skipUpdateTail1:
-    # snake moves by 1 square
-    # get current position of head (t1)
-    lw $t1, 0($s1)
-    # head = head-1 (s1)
-    addi $s1, $s1, -1
-    # get position of snake1 head (t5)
-    lw $t5, 0($s1)
 
-  # possible movement directions = up (t6)
-  addi $t6, $0, 1
-  # move up?
-  bne $s5, $t6, checkMoveRight
-  # store new position of head (t7)
-  addi $t7, $t1, -40
-  sw $t7, 0($s1)
+  # store old value of head pointer (t3)
+  add $t3, $0, $s1
 
-  checkMoveRight:
-    # possible movement directions = right (t6)
-    addi $t6, $0, 2
-    # move right?
-    bne $s5, $t6, checkMoveDown
-    # store new position of head (t7)
-    addi $t7, $t1, 1
-    sw $t7, 0($s1)
+  bne $s1, $0, head1NotZero			# if (head1==0) head1 = 49;
+  addi $s1, $0, 49
+  j afterUpdateHead1
 
-  checkMoveDown:
-    # possible movement directions = down (t6)
-    addi $t6, $0, 3
-    # move down?
-    bne $s5, $t6, checkMoveLeft
-    # store new position of head (t7)
-    addi $t7, $t1, 40
-    sw $t7, 0($s1)
+  head1NotZero:					# else head1 = head1 - 1;
+  addi $t0, $0, 1
+  sub $s1, $s1, $t0
 
-  checkMoveLeft:
-    # possible movement directions = left (t6)
-    addi $t6, $0, 4
-    # move left?
-    bne $s5, $t6, endMoveSnake
-    # store new position of head (t7)
-    addi $t7, $t1, -1
-    sw $t7, 0($s1)
+  afterUpdateHead1:
 
-  endMoveSnake:
+  # move1 == 1?
+  addi $t0, $0, 1
+  bne $s5, $t0, notMoveUp
+  # load snake1[oldHead1] ROW (t0)
+  lw $t0, 1600($t3)
+  # load snake1[oldHead1] COL (t1)
+  lw $t1, 1650($t3)
+  # snake1[head1] = snake1[oldHead1] + deltaChange;
+  # deltaChange = (-1, 0)
+  addi $t2, $0, 1
+  sub $t4, $t0, $t2 				# row = row - 1
+  sw $t4, 1600($s1)
+
+  # check collision with wall
+  blt $t4, $0, collisionUpTrue1
+  j notMoveUp
+
+  collisionUpTrue1:
+  addi $s7, $0, 1
+
+  notMoveUp:
+
+  # move1 == 2?
+  addi $t0, $0, 2
+  bne $s5, $t0, notMoveRight
+  # load snake1[oldHead1] ROW (t0)
+  lw $t0, 1600($t3)
+  # load snake1[oldHead1] COL (t1)
+  lw $t1, 1650($t3)
+  # snake1[head1] = snake1[oldHead1] + deltaChange;
+  # deltaChange = (0, 1)
+  addi $t2, $0, 1
+  add $t4, $t1, $t2 				# col = col + 1
+  sw $t4, 1650($s1)
+
+  # check collision with wall
+  addi $t0, $0, 39
+  blt $t0, $t4, collisionRightTrue1		# if (col > 39)
+  j notMoveRight
+
+  collisionRightTrue1:
+  addi $s7, $0, 1
+  
+  notMoveRight:
+
+  # move1 == 3?
+  addi $t0, $0, 3
+  bne $s5, $t0, notMoveDown
+  # load snake1[oldHead1] ROW (t0)
+  lw $t0, 1600($t3)
+  # load snake1[oldHead1] COL (t1)
+  lw $t1, 1650($t3)
+  # snake1[head1] = snake1[oldHead1] + deltaChange;
+  # deltaChange = (1, 0)
+  addi $t2, $0, 1
+  add $t4, $t0, $t2 				# row = row + 1
+  sw $t4, 1600($s1)
+
+  # check collision with wall
+  addi $t0, $0, 39
+  blt $t0, $t4, collisionDownTrue1		# if (row > 39)
+  j notMoveDown
+
+  collisionDownTrue1:
+  addi $s7, $0, 1
+
+  notMoveDown:
+
+  # move1 == 4?
+  addi $t0, $0, 4
+  bne $s5, $t0, notMoveLeft
+  # load snake1[oldHead1] ROW (t0)
+  lw $t0, 1600($t3)
+  # load snake1[oldHead1] COL (t1)
+  lw $t1, 1650($t3)
+  # snake1[head1] = snake1[oldHead1] + deltaChange;
+  # deltaChange = (0, -1)
+  addi $t2, $0, 1
+  sub $t4, $t1, $t2 				# col = col - 1
+  sw $t4, 1650($s1)
+
+  # check collision with wall
+  blt $t4, $0, collisionDownTrue1		# if (col < 0)
+  j notMoveLeft
+
+  collisionLeftTrue1:
+  addi $s7, $0, 1
+
+  notMoveLeft:
+
+
+  
 
 
   jr $ra
-
-isOutOfBoundsLeftRight:
-  div $t0, $a0, $a1
-  mul $t1, $t0, $a1
-  bne $t0, $t1, modNotEqual
-  addi $v0, $0, 1
-  jr $ra
-
-  modNotEqual:
-    addi $v0, $0, 0
-    jr $ra
 
 # delay by $a0 cycles
 delay:
