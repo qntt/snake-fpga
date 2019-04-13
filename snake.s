@@ -5,6 +5,7 @@
 # s6: direction player 2
 
 
+addi $s0, $0, 1
 
 loop:
   addi $t0, $0, 1
@@ -19,6 +20,13 @@ loop:
   stage2:
     jal renderSnake
 
+  # save stage, head1, head2 into dmem
+  sw $s0, 1824($0)
+  sw $s1, 1825($0)
+  sw $s2, 1826($0)
+
+  # send data to vga_controller and display snake
+  jal displaySnake
 
   # delay by 5M cycles
   addi $t0, $0, 5000
@@ -29,7 +37,6 @@ loop:
 
   endloop:
     j loop
-
 
 init:
   addi $t0, $0, 1800
@@ -64,8 +71,8 @@ init:
   sw $0, 0($t2)
   sw $0, 1($t2)
 
-  # set stage to 1
-  addi $s0, $0, 1
+  # set stage to 2
+  addi $s0, $0, 2
 
   jr $ra
 
@@ -201,4 +208,16 @@ delay:
   delayloop1:
     addi $t0, $t0, 1
     bne $t0, $a0, delayloop1
+  jr $ra
+
+
+displaySnake:
+  addi $t0, $0, 1600
+  addi $t1, $0, 1849
+  
+  blt $t1, $t0, returnToLoop
+    #loadSnake $t0
+    addi $t0, $t0, 1
+  
+  returnToLoop:
   jr $ra

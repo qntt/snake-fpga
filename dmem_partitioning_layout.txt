@@ -67,3 +67,14 @@ s1: snake 1 head pointer
 
 s2: snake 2 head pointer
 1826
+
+isDrawing
+1830
+
+\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
+Other notes
+
+loadSnake $rs
+opcode: 01111
+$rs is the memory address to load into vga_controller
+0099 : 01111000000100000000000000000000; --   loadSnake $t0
