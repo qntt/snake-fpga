@@ -4,5 +4,6 @@
 !*.s
 !*.mif
 !*.txt
+!processor
 
 !README.md
