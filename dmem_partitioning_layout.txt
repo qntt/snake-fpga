@@ -71,6 +71,22 @@ s2: snake 2 head pointer
 isDrawing
 1830
 
+==========================================
+Outputs of processor to dmem
+
+1840: isDrawing
+1841: stage
+1842: 
+
+==========================================
+Store the board position of every snake body part
+
+snake1
+2000...2049
+
+snake2
+2050...2099
+
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 Other notes
 

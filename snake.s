@@ -21,12 +21,11 @@ loop:
   stage2:
     jal renderSnake
 
-  # save stage, head1, head2 into dmem
-  sw $s0, 1824($0)
-  sw $s1, 1825($0)
-  sw $s2, 1826($0)
+  #### BEGIN DRAWING ON VGA
+  addi $t0, $0, 1
+  sw $t0, 1840($0)		# save 1 to isDrawing
+  sw $s0, 1841($0)		# save stage
 
-  # send data to vga_controller and display snake
   jal displaySnake
 
   # delay by 5M cycles
@@ -35,6 +34,11 @@ loop:
   mul $t1, $t0, $t1
   addi $a0, $0, $t1
   jal delay
+
+  # set 0 to isDrawing
+  sw $0, 1840($0)
+
+  jal displaySnake
 
   endloop:
     j loop
@@ -62,6 +66,12 @@ init:
   addi $t1, $0, 22
   sw $t0, 1602($0)
   sw $t1, 1652($0)
+
+  # initialize the board
+  addi $t0, $0, 1
+  sw $t0, 820($0)
+  sw $t0, 821($0)
+  sw $t0, 822($0)
 
   addi $t2, $0, 3         # store length of snake1
   sw $t2, 1822($0)
@@ -109,6 +119,11 @@ renderSnake:
 
   afterUpdateHead1:
 
+  # change board at tail position
+  lw $t4, 2000($t2)		# board position of snake1
+  sw $0, 0($t4)			# board[snake1[tail1]] = 0;
+
+
   # move1 == 1?
   addi $t0, $0, 1
   bne $s5, $t0, notMoveUp
@@ -121,6 +136,12 @@ renderSnake:
   addi $t2, $0, 1
   sub $t4, $t0, $t2                 # row = row - 1
   sw $t4, 1600($s1)
+
+  # board position changes by -40
+  addi $t5, $0, 40
+  lw $t6, 2000($t3)
+  sub $t7, $t6, $t5
+  sw $t7, 2000($s1)
 
   # check collision with wall
   blt $t4, $0, collisionUpTrue1
@@ -143,6 +164,12 @@ renderSnake:
   addi $t2, $0, 1
   add $t4, $t1, $t2                 # col = col + 1
   sw $t4, 1650($s1)
+
+  # board position changes by 1
+  addi $t5, $0, 1
+  lw $t6, 2000($t3)
+  add $t7, $t6, $t5
+  sw $t7, 2000($s1)
 
   # check collision with wall
   addi $t0, $0, 39
@@ -167,6 +194,12 @@ renderSnake:
   add $t4, $t0, $t2                 # row = row + 1
   sw $t4, 1600($s1)
 
+  # board position changes by +40
+  addi $t5, $0, 40
+  lw $t6, 2000($t3)
+  add $t7, $t6, $t5
+  sw $t7, 2000($s1)
+
   # check collision with wall
   addi $t0, $0, 39
   blt $t0, $t4, collisionDownTrue1      # if (row > 39)
@@ -190,6 +223,12 @@ renderSnake:
   sub $t4, $t1, $t2                 # col = col - 1
   sw $t4, 1650($s1)
 
+  # board position changes by -1
+  addi $t5, $0, 1
+  lw $t6, 2000($t3)
+  sub $t7, $t6, $t5
+  sw $t7, 2000($s1)
+
   # check collision with wall
   blt $t4, $0, collisionDownTrue1       # if (col < 0)
   j notMoveLeft
@@ -199,7 +238,10 @@ renderSnake:
 
   notMoveLeft:
 
-
+  # change board at head position for snake 1
+  addi $t5, $0, 1
+  lw $t4, 2000($s1)		# board position of snake1
+  sw $t5, 0($t4)		# board[snake1[head1]] = 0;
   
 
 
@@ -215,11 +257,11 @@ delay:
 
 
 displaySnake:
-  addi $t0, $0, 1600
-  addi $t1, $0, 1849
+  addi $t0, $0, 1840
+  addi $t1, $0, 1841
   
   blt $t1, $t0, returnToLoop
-    #loadSnake $t0
+    add $0, $0, $0		# loadSnake $t0
     addi $t0, $t0, 1
   
   returnToLoop:
