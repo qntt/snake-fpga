@@ -88,6 +88,11 @@ module skeleton(resetn,
 	wire stage;
 	wire isDrawing;
 	
+	wire [11:0] address_dmem_fromVGA;
+	wire [31:0] data_fromVGA;
+	wire wren_fromVGA;
+	wire [31:0] q_dmem_toVGA;
+	
 	integer move1, move2;
 	
 	initial begin
@@ -109,7 +114,7 @@ module skeleton(resetn,
 	Reset_Delay			r0	(.iCLK(CLOCK_50),.oRESET(DLY_RST)	);
 	VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(CLOCK_50),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
 	
-	wire [250*32-1 : 0] snake_data;
+	wire [10*32-1 : 0] snake_data;
 	
 	//snake2 s2 (.clock(VGA_CLK), .rstage(stage), .isDrawing(isDrawing));
 	vga_controller vga_ins(.iRST_n(DLY_RST),
@@ -120,7 +125,12 @@ module skeleton(resetn,
 								 .b_data(VGA_B),
 								 .g_data(VGA_G),
 								 .r_data(VGA_R), .up(up), .down(down), .left(left), .right(right),
-								 .snake_data(snake_data));
+								 .snake_data(snake_data),
+								 .address_dmem_fromVGA(address_dmem_fromVGA),
+								 .data_fromVGA(data_fromVGA),
+								 .wren_fromVGA(wren_fromVGA),
+								 
+								 .q_dmem_toVGA(q_dmem_toVGA));
 								 //.board(board), 
 								 //.snake1(snake1), .snake2(snake2), 
 								 //.head1(head1), .head2(head2),
@@ -194,7 +204,11 @@ module skeleton(resetn,
         data_writeReg,                  // O: Data to write to for regfile
         data_readRegA,                  // I: Data from port A of regfile
         data_readRegB,                   // I: Data from port B of regfile
-		  snake_data
+		  snake_data,
+		  address_dmem_fromVGA,
+		  data_fromVGA,
+		  wren_fromVGA,
+		  q_dmem_toVGA
     );
 
 								 

@@ -6,7 +6,13 @@ module vga_controller(iRST_n,
                       b_data,
                       g_data,
                       r_data, up, down, left, right,
-							 snake_data);
+							 snake_data,
+							 
+							 address_dmem_fromVGA,
+							 data_fromVGA,
+							 wren_fromVGA,
+							 
+							 q_dmem_toVGA);
 							 //board, 
 							 //snake1, snake2, 
 							 //head1, head2,
@@ -26,7 +32,14 @@ output [7:0] b_data;
 output [7:0] g_data;  
 output [7:0] r_data;     
 
-input [250*32-1 : 0] snake_data;
+output reg [11:0] address_dmem_fromVGA;
+output reg [31:0] data_fromVGA;
+output reg wren_fromVGA;
+input [31:0] q_dmem_toVGA;
+
+input [10*32-1 : 0] snake_data;
+
+integer counter;
 
 
 
@@ -60,8 +73,9 @@ begin
      ADDR<=19'd0;
   else if (cHS==1'b0 && cVS==1'b0)
      ADDR<=19'd0;
-  else if (cBLANK_n==1'b1)
-     ADDR<=ADDR+1;
+//  else if (cBLANK_n==1'b1 && counter==3) begin
+//     ADDR<=ADDR+1;
+//	end
 end
 //////////////////////////
 //////INDEX addr.
@@ -82,7 +96,7 @@ integer boardPosition;
 integer boardValue;
 integer boardRow, boardCol;
 
-integer isDrawing;
+reg [31:0] isDrawing;
 integer delayCounter;
 integer initialCounter;
 
@@ -115,10 +129,12 @@ initial begin
 	
 	score1 = 0;
 	score2 = 0;
-	isDrawing = 0;
+	isDrawing = 32'd0;
 	
 	stage = 2;
 	isCollide1 = 0;
+	
+	counter = 0;
 	
 //	length1 = 10;
 //	length2 = 5;
@@ -154,72 +170,87 @@ integer rowSnake1, colSnake1, snakePosition1;
 always@(posedge iVGA_CLK)
 begin
 
-	// TODO: uncomment the following line
-	//stage = snake_data[(1824-1600+1)*32-1 -:32];
-	stage = 2;
+	// retreive the value of isDrawing from processor
+	isDrawing = snake_data[32*10-1 : 32*9];
+							color_index = 8'd6;
 
-	if (stage == 2) begin
-		addressRow = ADDR / 640;
-		addressCol = ADDR % 640; 
-		 
-		// check if ADDR is in the game screen (40x40 board)
-		if (addressCol < 480) begin
-			boardRow = addressRow/pixelWidth;
-			boardCol = addressCol/pixelWidth;
-			boardPosition = 40*boardRow + boardCol;
-				
-			head1 = snake_data[(1825-1600+1)*32-1 -:32];
-			length1 = snake_data[(1822-1600+1)*32-1 -:32];
-			
-			//boardValue = board[1600-boardPosition];
-			isInImage = 1'b0;
-			for (j=0; j<50; j=j+1) begin
-				if (j <= length1) begin 
-					position1 = head1 + j;
-					if (position1 >= 50) begin
-						position1 = position1-50;
-					end
-					
-					rowSnake1 = snake_data[(position1+1)*32-1 -:32];
-					colSnake1 = snake_data[(position1+1+50)*32-1 -:32];
-					snakePosition1 = 40*rowSnake1 + colSnake1;
-					
-					//if (snake1[position1] == boardPosition) begin
-					if (snakePosition1 == boardPosition) begin
-						color_index = 8'd1;
-						isInImage = 1'b1;
-					end
+	if (isDrawing == 32'd1) begin
+		// calculate the board position at this ADDR
+
+
+		if (counter == 0) begin
+			// TODO: uncomment the following line
+			//stage = snake_data[(1824-1600+1)*32-1 -:32];
+			stage = 2;
+
+			if (stage == 2) begin
+				addressRow = ADDR / 640;
+				addressCol = ADDR % 640; 
+				 
+				// check if ADDR is in the game screen (40x40 board)
+				if (addressCol < 480) begin
+					boardRow = addressRow/pixelWidth;
+					boardCol = addressCol/pixelWidth;
+					boardPosition = 40*boardRow + boardCol;
 				end
-			end
-			
-			if (boardPosition == applePosition) begin
-				color_index = 8'd3;
-				isInImage = 1'b1;
-			end
-			if (isInImage == 1'b0) begin
-				color_index = 8'd4;
-			end
-			
-			// TODO: display snake 2's positions
-			
-			
-		end
 
-		// draw boundaries of board
-		if (addressCol == 480) begin
-			color_index = 8'd0;
+			end
 		end
-//			else begin
-//				color_index = 8'd4;
-//			end
+		
+		
+		// get the board value from dmem
+		if (counter == 1) begin
+			address_dmem_fromVGA = boardPosition[11:0];
+			data_fromVGA = 32'b0;
+			wren_fromVGA = 1'b0;
+		end
+		
+		
+		// decide the color according to the board value
+		if (counter == 2) begin
+			color_index = 8'd7;
+			if (stage==2) begin
+				color_index = 8'd6;
+				if (q_dmem_toVGA == 32'd1) begin
+					color_index = 8'd1;
+				end
+				else if (q_dmem_toVGA == 32'd2) begin
+					color_index = 8'd2;
+				end
+				else if (q_dmem_toVGA == 32'd3) begin
+					color_index = 8'd3;
+				end
+				else begin
+					color_index = 8'd4;
+				end
+				
+//				if (addressCol == 480) begin
+//					color_index = 8'd0;
+//				end
+			end
+		end
+		
+		// allow ADDR to increment
+		if (counter == 3) begin
+			
+		end
+		
+		
+		// reset the counter
+		if (counter == 4) begin
+			counter = 0;
+		end
+		
+		
+		counter = counter + 1;
 		
 	end
-	if (stage == 3) begin 
-		color_index = 8'd2;
-	end
-//		else begin
-//			color_index = 8'd4;
-//		end
+
+
+
+
+	
+	
 	
 	
 	if (up==1'b0 && move1 != 3) begin
