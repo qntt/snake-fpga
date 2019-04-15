@@ -9,11 +9,8 @@
  * inspect which signals the processor tries to assert when.
  */
 
-module skeleton_proc(clock, reset);
+module skeleton(clock, reset);
     input clock, reset;
-	 
-	 wire [359 : 0] snake_data;
-	 
 
     /** IMEM **/
     // Figure out how to generate a Quartus syncram component and commit the generated verilog file.
@@ -82,8 +79,7 @@ module skeleton_proc(clock, reset);
         ctrl_readRegB,                  // O: Register to read from port B of regfile
         data_writeReg,                  // O: Data to write to for regfile
         data_readRegA,                  // I: Data from port A of regfile
-        data_readRegB,                   // I: Data from port B of regfile
-		  snake_data
+        data_readRegB                   // I: Data from port B of regfile
     );
 
 endmodule

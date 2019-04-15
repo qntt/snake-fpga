@@ -71,12 +71,7 @@ module processor(
     data_readRegA,                  // I: Data from port A of regfile
     data_readRegB,                  // I: Data from port B of regfile
 	 
-	 snake,
-	 address_dmem_fromVGA,
-	 data_fromVGA,
-	 wren_fromVGA,
-	 q_dmem_toVGA
-	 
+	 snake
 );
     // Control signals
     input clock, reset;
@@ -98,14 +93,7 @@ module processor(
     input [31:0] data_readRegA, data_readRegB;
 	 
 	 // changed from 226
-	 output [10*32-1:0] snake;
-	 
-	 input [11:0] address_dmem_fromVGA;
-	 input [31:0] data_fromVGA;
-	 input wren_fromVGA;
-	 output [31:0] q_dmem_toVGA;
-
-	 
+	 output [359:0] snake;
 	 
 	 wire [4:0] rd_m, rs_m, rt_m;
 	 wire [4:0] rd_w, rs_w, rt_w;
@@ -177,8 +165,12 @@ module processor(
 	
 	wire [31:0] ir_dx, pc_dx, a_dx, b_dx, a_out_regfile, b_out_regfile, a_in_dx, b_in_dx;
 	
+	// all1 is a noop
+	wire [31:0] all1;
+	assign all1 = 32'b11111111111111111111111111111111;
+	
 	wire [31:0] ir_in_dx;
-	assign ir_in_dx = isBranch || isLoadToALU ? noop : ir_fd;
+	assign ir_in_dx = isBranch || isLoadToALU ? all1 : ir_fd;
 		
 	latch_dx latch_dx1 (.ir_in(ir_in_dx), .pc_in(pc_fd), .a_in(a_in_dx), .b_in(b_in_dx), 
 		.clock(clock), .reset(reset), .enable(~isStall_dx), .ir_out(ir_dx), .pc_out(pc_dx), 
@@ -478,13 +470,12 @@ module processor(
 	// ====== Multdiv
 	
 	wire isAdd_x;
-	assign isAdd_x = ~aluop[4]&~aluop[3]&~aluop[2]&~aluop[1]&~aluop[0];
+	assign isAdd_x = (~aluop[4]&~aluop[3]&~aluop[2]&~aluop[1]&~aluop[0]) && isALUOp_x;
 	wire isSub_x;
-	assign isSub_x = ~aluop[4]&~aluop[3]&~aluop[2]&~aluop[1]&aluop[0];
+	assign isSub_x = (~aluop[4]&~aluop[3]&~aluop[2]&~aluop[1]&aluop[0]) && isALUOp_x;
 	wire isMul_x;
-	assign isMul_x = ~aluop[4]&~aluop[3]&aluop[2]&aluop[1]&~aluop[0];
-	wire isDiv_x;
-	assign isDiv_x = ~aluop[4]&~aluop[3]&aluop[2]&aluop[1]&aluop[0];
+	assign isMul_x = (~aluop[4]&~aluop[3]&aluop[2]&aluop[1]&~aluop[0]) && isALUOp_x;
+	assign isDiv_x = (~aluop[4]&~aluop[3]&aluop[2]&aluop[1]&aluop[0]) && isALUOp_x;
 	
 	wire [31:0] multdiv_result;
 	wire data_exception, data_resultRDY;
@@ -492,7 +483,7 @@ module processor(
 	// Check if multdiv is still ongoing
 	wire startMultDiv, ready_reg;
 	dflipflop dff_startMultDiv (.d(isMul_x || isDiv_x), 
-		.clk(clock), .clrn(1'b1), .prn(1'b1), .ena(~isLoadToALU), .q(ready_reg));
+		.clk(clock), .clrn(1'b1), .prn(1'b1), .ena(1'b1), .q(ready_reg));
 	assign startMultDiv = (isMul_x || isDiv_x) && ~ready_reg;
 	
 	wire isStillMultDiv, pre_isStillMultDiv;
@@ -502,11 +493,11 @@ module processor(
 	
 	assign isStall_pc = (isStillMultDiv && ~data_resultRDY) || isLoadToALU;
 	assign isStall_fd = (isStillMultDiv && ~data_resultRDY) || isLoadToALU;
-	assign isStall_dx = (isStillMultDiv && ~data_resultRDY) || isLoadToALU;
-	assign isStall_xm = isLoadToALU;
+	assign isStall_dx = (isStillMultDiv && ~data_resultRDY); //|| isLoadToALU;
+	assign isStall_xm = 1'b0; //isLoadToALU;
 	
 	multdiv md1 (.data_operandA(alu_input_1), .data_operandB(alu_input_2), 
-		.ctrl_MULT(isMul_x && startMultDiv && ~isLoadToALU), 
+		.ctrl_MULT(isMul_x && startMultDiv), 
 		.ctrl_DIV(isDiv_x && startMultDiv && ~isLoadToALU), .clock(clock), 
 		.data_result(multdiv_result), .data_exception(data_exception), .data_resultRDY(data_resultRDY));
 		
@@ -532,7 +523,7 @@ module processor(
 	// 00: normal alu output, 01: noop(branches or still in multdiv computation)
 	// 10: finished multdiv, dataresultRDY is 1, 11: unused
 	wire [1:0] o_in_x_sel;
-	assign o_in_x_sel[0] = isBranch || isStillMultDiv || isLoadToALU;
+	assign o_in_x_sel[0] = isBranch || isStillMultDiv;
 	assign o_in_x_sel[1] = data_resultRDY;
 	
 	mux_4_1 o_in_x_mux (
@@ -549,16 +540,13 @@ module processor(
 	wire [31:0] ir_in_xm;
 	assign ir_in_xm = isBranch || (isStillMultDiv && ~data_resultRDY) ? noop : ir_dx;
 	
-	wire [31:0] all1;
-	assign all1 = 32'b11111111111111111111111111111111;
-	
 	wire [31:0] ir_in_xm_jal;
 	assign ir_in_xm_jal[31:27] = 5'b00000;
 	assign ir_in_xm_jal[26:22] = 5'd31;
 	assign ir_in_xm_jal[21:0] = 22'b0;
 	
 	wire [31:0] ir_in_xm_final;
-	assign ir_in_xm_final = isLoadToALU ? all1: (isJal_x ? ir_in_xm_jal : ir_in_xm);
+	assign ir_in_xm_final = (isJal_x ? ir_in_xm_jal : ir_in_xm);
 	
 	wire [31:0] o_in_x_final;
 	assign o_in_x_final = isJal_x ? pc_dx : o_in_x;
@@ -615,21 +603,21 @@ module processor(
 	
 
 	
-	assign address_dmem = ( snake[32*9] == 1'b1 ) ? address_dmem_fromVGA : o_xm[11:0];
-   assign data = WM ? data_writeReg : b_xm;
-   assign wren = ( snake[32*9] == 1'b1 ) ? wren_fromVGA : isSW_m;
-	
-	assign q_dmem_toVGA = q_dmem;
+	assign address_dmem = o_xm[11:0];
+   	assign data = WM ? data_writeReg : b_xm;
+   	assign wren = isSW_m;
 	
 	
 	// Load Snake register
 	
+	wire isLoadSnake_w;
+	
 	snake_register sr1 (
 		.value_in(d_mw), 
-		.index(o_mw-1600), 
+		.index(o_mw-2100), 
 		.clock(clock), 
 		.reset(reset),
-		.enable(isLoadSnake_m),
+		.enable(isLoadSnake_w),
 		.value_out(snake)
 	);
 	
@@ -643,7 +631,6 @@ module processor(
 	assign rs_w = ir_mw[21:17];
 	assign rt_w = ir_mw[16:12];
 	
-	wire isLoadSnake_w;
 	assign isLoadSnake_w = ~opw[4]&opw[3]&opw[2]&opw[1]&opw[0];
 	
 	assign isSW_w = ~opw[4]&~opw[3]&opw[2]&opw[1]&opw[0];
@@ -683,10 +670,15 @@ module processor(
 		.in0(o_mw), .in1(rStatus_mw), .in2(T_w_extend), .in3(d_mw),
 		.select(data_write_sel));
 		
-	wire rtx_rdm, rsx_rdm;
-	equality5 loadStall1 (.out(rtx_rdm), .a(rt_x), .b(rd_m));
-	equality5 loadStall2 (.out(rsx_rdm), .a(rs_x), .b(rd_m));
-	assign isLoadToALU = isLW_m && ((rtx_rdm) || (rsx_rdm && ~isSW_x)) && isALUOp_x;
+	wire rtd_rdx, rsd_rdx;
+	equality5 loadStall1 (.out(rtd_rdx), .a(rt_d), .b(rd_x));
+	equality5 loadStall2 (.out(rsd_rdx), .a(rs_d), .b(rd_x));
+	//assign isLoadToALU = isLW_m && ((rtx_rdm) || (rsx_rdm && ~isSW_x)) && isALUOp_x;
+	assign isLoadToALU = isLW_x && ( 
+		(rtd_rdx && (isALUOp_d))  
+		|| 
+		(rsd_rdx && (isSW_d || isALUOp_d || isAddi_d || isLW_d || isBne_d || isBlt_d))
+	);
 	 
 
 endmodule 
