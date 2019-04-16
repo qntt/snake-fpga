@@ -1,0 +1,11 @@
+/processor
+imem
+img_index
+skeleton
+snake.mif
+snake.s
+snake_index.mif
+vga_controller
+
+-remove
+initial processor
