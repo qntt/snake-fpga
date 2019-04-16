@@ -112,7 +112,7 @@ snake2
 Board (currently not using but can be used for collision detection)
 
 board
-0...1599
+2100...3699
 
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 Other notes
