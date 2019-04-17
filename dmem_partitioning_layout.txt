@@ -9,10 +9,40 @@ Dedicated registers
 
 
 ====================================================================================
-Board (currently not using but can be used for collision detection)
+Store direction of snakes (up: 00, right: 01, down: 10, left: 11)
 
-board
-0...1599
+snake1
+0...49
+
+snake2
+50...99
+
+==========================================
+Send to VGA controller
+
+head1 position
+100
+
+head2 position 
+101
+
+length1
+102
+
+length2
+103
+
+stage
+104
+
+head1 pointer
+105
+
+head2 pointer
+106
+
+apple
+107
 
 =======================================
 Snake arrays
@@ -30,13 +60,13 @@ snake2 array cols
 1750...1799
 
 =======================================
-Apple(s)
+Apple(s) (changed from row and col to just position)
 
-Apples rows
+Apples position 
 1800...1809
 
-Apples cols
-1810...1819
+//Apples cols
+//1810...1819
 
 =======================================
 Score
@@ -55,9 +85,9 @@ snake1
 
 snake2
 1823
-184
+
 =======================================
-Other
+Other (currently not used)
 
 s0: stage number
 1824
@@ -72,7 +102,7 @@ isDrawing
 1830
 
 ==========================================
-Outputs of processor to dmem
+Outputs of processor to dmem (currently not used)
 
 1840: isDrawing
 1841: stage
@@ -88,32 +118,10 @@ snake2
 2050...2099
 
 ==========================================
-Store direction of snakes (up: 00, right: 01, down: 10, left: 11)
+Board (currently not using but can be used for collision detection)
 
-snake1
-2100...2149
-
-snake2
-2150...2199
-
-==========================================
-Send to VGA controller
-
-head1
-2200
-
-head2
-2201
-
-length1
-2202
-
-length2
-2203
-
-stage
-2204
-
+board
+2100...3699
 
 \\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\\
 Other notes

@@ -56,7 +56,8 @@ module skeleton(resetn,
 	//assign clock = inclock;
 	
 	// your processor
-	processor myprocessor(clock, ~resetn, /*ps2_key_pressed, ps2_out, lcd_write_en, lcd_write_data,*/ debug_data_in, debug_addr);
+	//processor myprocessor(clock, ~resetn, /*ps2_key_pressed, ps2_out, lcd_write_en, lcd_write_data,*/ debug_data_in, debug_addr);
+	
 	
 	// keyboard controller
 	PS2_Interface myps2(clock, resetn, ps2_clock, ps2_data, ps2_key_data, ps2_key_pressed, ps2_out);
@@ -78,20 +79,21 @@ module skeleton(resetn,
 	
 	// some LEDs that you could use for debugging if you wanted
 	assign leds = 8'b00101011;
+	
 		
 	// VGA
-	wire [1600:0] board;
-	wire [200:0] snake1, snake2;
-	wire head1, head2;
-	wire length1, length2;
-	wire score1, score2;
-	wire stage;
-	wire isDrawing;
+	//wire [1600:0] board;
+	//wire [200:0] snake1, snake2;
+	//wire head1, head2;
+	//wire length1, length2;
+	//wire score1, score2;
+	//wire stage;
+	//wire isDrawing;
 	
-	wire [11:0] address_dmem_fromVGA;
-	wire [31:0] data_fromVGA;
-	wire wren_fromVGA;
-	wire [31:0] q_dmem_toVGA;
+	//wire [11:0] address_dmem_fromVGA;
+	//wire [31:0] data_fromVGA;
+	//wire wren_fromVGA;
+	//wire [31:0] q_dmem_toVGA;
 	
 	integer move1, move2;
 	
@@ -102,20 +104,25 @@ module skeleton(resetn,
 	
 	
 	always@(*) begin
-		case({up, right, down, left})
-			4'b1000: move1 = 1;
-			4'b0100: move1 = 2;
-			4'b0010: move1 = 3;
-			4'b0001: move1 = 4;
-		endcase
+		if (up==1'b0 && move1 != 3) begin
+			move1 = 1;
+		end
+		else if (right==1'b0 && move1 != 4) begin
+			move1 = 2;
+		end
+		else if (down==1'b0 && move1 != 1) begin
+			move1 = 3;
+		end
+		else if (left==1'b0 && move1 != 2) begin
+			move1 = 4;
+		end
 	end
 	
 	
 	Reset_Delay			r0	(.iCLK(CLOCK_50),.oRESET(DLY_RST)	);
 	VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(CLOCK_50),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
 	
-	wire [359 : 0] snake_data;
-		wire [359 : 0] snake_datatest;
+	wire [423 : 0] snake_data;
 
 	
 	//snake2 s2 (.clock(VGA_CLK), .rstage(stage), .isDrawing(isDrawing));
@@ -127,7 +134,7 @@ module skeleton(resetn,
 								 .b_data(VGA_B),
 								 .g_data(VGA_G),
 								 .r_data(VGA_R), .up(up), .down(down), .left(left), .right(right),
-								 .snake_data(snake_datatest));
+								 .snake_data(snake_data));
 								 //.board(board), 
 								 //.snake1(snake1), .snake2(snake2), 
 								 //.head1(head1), .head2(head2),
@@ -174,7 +181,8 @@ module skeleton(resetn,
         ctrl_readRegB,
         data_writeReg,
         data_readRegA,
-        data_readRegB
+        data_readRegB,
+		  move1
     );
 	 
 	 /** PROCESSOR **/
@@ -204,8 +212,7 @@ module skeleton(resetn,
 		  snake_data,
     );
 
-			
-snakeoutput testsnake(snake_datatest);
+
 			
 	/*
 	snake snake1 (.rboard(board), .clock(VGA_CLK), .reset(reset),

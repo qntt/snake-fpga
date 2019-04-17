@@ -26,7 +26,7 @@ output [7:0] b_data;
 output [7:0] g_data;  
 output [7:0] r_data;     
 
-input [359 : 0] snake_data;
+input [423 : 0] snake_data;
 
 integer counter;
 
@@ -82,78 +82,29 @@ integer pixelWidth;
 
 integer addressRow, addressCol;
 integer boardPosition;
-integer boardValue;
 integer boardRow, boardCol;
 
-reg [31:0] isDrawing;
-integer delayCounter;
-integer initialCounter;
-
- //integer board[1600:0];
- //integer snake1[49:0], snake2[49:0];
  integer head1, head2;
  integer length1, length2;
- integer score1, score2;
- reg [31:0] stage;
- integer oldHead1, oldHead2;
+ integer stage;
  
  integer move1;
-
-integer tail1, tail2;
-integer isCollide1; 
 
 integer applePosition;
  
 reg [7:0] color_index;
 
-integer i;
 
 initial begin
 	pixelWidth = 12;
-	delayCounter = 0;
-	initialCounter = 0;
 	move1 = 2;
 	
 	applePosition = 40*10+25;
 	
-	score1 = 0;
-	score2 = 0;
-	isDrawing = 32'd0;
-	
-	stage = 2;
-	isCollide1 = 0;
-	
-	counter = 0;
-	
-//	length1 = 10;
-//	length2 = 5;
-//	head1 = 40;
-//	head2 = 0;
-	/*
-	for (i=0; i<=49; i=i+1) begin
-		snake1[i] = 0;
-		snake2[i] = 0;
-	end
-	
-	snake1[40] = 40*10+15;
-	snake1[41] = 40*10+14;
-	snake1[42] = 40*10+13;
-	snake1[43] = 40*10+12;
-	snake1[44] = 40*10+11;
-	snake1[45] = 40*10+10;
-	snake1[46] = 40*10+9;
-	snake1[47] = 40*10+8;
-	snake1[48] = 40*10+7;
-	snake1[49] = 40*10+6;
-	*/
-	
 end
 
 integer j;
-integer position1;
 reg isInImage;
-
-integer rowSnake1, colSnake1, snakePosition1;
 
 integer head1position, head2position;
 integer currPosition;
@@ -176,12 +127,19 @@ begin
 	length1 = snake_data[295:264];
 	head2position = snake_data[263:232];
 	length2 = snake_data[327:296];
+	head1 = snake_data[391:360];
+	head2 = snake_data[423:392];
 	
 	// 3. loop through all directions to see if the current body part has a color
 	
+	if (stage== 32'd0) begin
+		color_index = 8'd2;
+	end
 	
-
+	
 	if (stage == 32'd2) begin
+		//color_index = 8'd1;
+	
 			addressRow = ADDR / 640;
 			addressCol = ADDR % 640; 
 			 
@@ -199,7 +157,7 @@ begin
 					color_index = 8'd1;
 					isInImage = 1'b1;
 				end
-				currDirection = snake_data[1:0];
+				currDirection = snake_data[2*(head1)+1 -:2];
 				
 				
 				for (j=1; j<50; j=j+1) begin
@@ -218,7 +176,7 @@ begin
 							currPosition = currPosition - 1;
 						end
 					
-						currDirection = snake_data[2*j+1 -: 2];
+						currDirection = snake_data[2*(head1+j)+1 -: 2];
 					
 						
 						if (currPosition == boardPosition) begin
@@ -248,11 +206,12 @@ begin
 //			else begin
 //				color_index = 8'd4;
 //			end
+		
 			
-		end
-		if (stage == 32'd3) begin 
-			color_index = 8'd2;
-		end
+	end
+	if (stage == 32'd3) begin 
+		color_index = 8'd3;
+	end
 //		else begin
 //			color_index = 8'd4;
 //		end
@@ -262,18 +221,7 @@ begin
 	
 	
 	
-	if (up==1'b0 && move1 != 3) begin
-		move1 = 1;
-	end
-	else if (right==1'b0 && move1 != 4) begin
-		move1 = 2;
-	end
-	else if (down==1'b0 && move1 != 1) begin
-		move1 = 3;
-	end
-	else if (left==1'b0 && move1 != 2) begin
-		move1 = 4;
-	end
+
 
 end
 

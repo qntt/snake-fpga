@@ -9,3 +9,9 @@ vga_controller
 
 -remove
 initial processor
+skeleton file in processor
+imem and dmem in processor
+
+
+
+add proc_tb to testbench

@@ -22,24 +22,30 @@ loop:
     jal renderSnake
 
   #### BEGIN DRAWING ON VGA
-  # save head
-  sw $s1, 2200($0)
-  sw $s2, 2201($0)
+  # save head positions
+  lw $t1, 2000($s1)
+  lw $t2, 2050($s2)
+  sw $t1, 100($0)
+  sw $t2, 101($0)
 
   # save length
   lw $t0, 1822($0)
   lw $t1, 1823($0)
-  sw $t0, 2202($0)
-  sw $t1, 2203($0)
+  sw $t0, 102($0)
+  sw $t1, 103($0)
 
   # save stage
-  sw $s0, 2204($0)
+  sw $s0, 104($0)
+
+  # save head pointers
+  sw $s1, 105($0)
+  sw $s2, 106($0)
 
   jal displaySnake
 
   # delay by 5M cycles
   addi $t0, $0, 5000
-  addi $t1, $0, 1000
+  addi $t1, $0, 500
   mul $t1, $t0, $t1
   add $a0, $0, $t1
   jal delay
@@ -48,12 +54,9 @@ loop:
     j loop
 
 init:
-  addi $t0, $0, 1800
-  # define apple locations (10,10)
-  addi $t1, $0, 10
-  addi $t2, $0, 10
-  sw $t1, 0($t0)
-  sw $t2, 10($t0)
+  # define apple locations (10,25)
+  addi $t1, $0, 425
+  sw $t1, 1800($0)
   
   # initial values of snake is (20,20), (20,21), (20,22)
                     # define the initial head of the snakes
@@ -86,10 +89,10 @@ init:
   sw $t0, 2000($0)
 
   # initialize direction of each snake part
-  addi $t0, $0, 4
-  sw $t0, 2100($0)
-  sw $t0, 2101($0)
-  sw $t0, 2102($0)
+  addi $t0, $0, 3
+  sw $t0, 0($0)
+  sw $t0, 1($0)
+  sw $t0, 2($0)
 
   addi $t2, $0, 3         # store length of snake1
   sw $t2, 1822($0)
@@ -118,8 +121,9 @@ renderSnake:
   sub $t2, $t2, $t0             # tail1 = tail1 - 1
   
   # tail may wrap over array (update if tail1 >= 50) (t2)
-  addi $t0, $0, 50
+  addi $t0, $0, 49
   blt $t2, $t0, skipUpdateTail1
+  addi $t0, $0, 50
   sub $t2, $t2, $t0             # tail1 = tail1 - 50
 
   skipUpdateTail1:
@@ -138,8 +142,8 @@ renderSnake:
   afterUpdateHead1:
 
   # change board at tail position
-  lw $t4, 2000($t2)		# board position of snake1
-  sw $0, 0($t4)			# board[snake1[tail1]] = 0;
+  lw $t4, 2000($t2)   # board position of snake1
+  sw $0, 2100($t4)     # board[snake1[tail1]] = 0;
 
 
   # move1 == 1?
@@ -161,9 +165,9 @@ renderSnake:
   sub $t7, $t6, $t5
   sw $t7, 2000($s1)
 
-  # direction[head1] = 3
-  addi $t0, $0, 3
-  sw $t0, 2100($s1)
+  # direction[head1] = 2
+  addi $t0, $0, 2
+  sw $t0, 0($s1)
 
   # check collision with wall
   blt $t4, $0, collisionUpTrue1
@@ -193,9 +197,9 @@ renderSnake:
   add $t7, $t6, $t5
   sw $t7, 2000($s1)
 
-  # direction[head1] = 4
-  addi $t0, $0, 4
-  sw $t0, 2100($s1)
+  # direction[head1] = 3
+  addi $t0, $0, 3
+  sw $t0, 0($s1)
 
   # check collision with wall
   addi $t0, $0, 39
@@ -226,9 +230,9 @@ renderSnake:
   add $t7, $t6, $t5
   sw $t7, 2000($s1)
 
-  # direction[head1] = 1
-  addi $t0, $0, 1
-  sw $t0, 2100($s1)
+  # direction[head1] = 0
+  addi $t0, $0, 0
+  sw $t0, 0($s1)
 
   # check collision with wall
   addi $t0, $0, 39
@@ -259,9 +263,9 @@ renderSnake:
   sub $t7, $t6, $t5
   sw $t7, 2000($s1)
 
-  # direction[head1] = 2
-  addi $t0, $0, 2
-  sw $t0, 2100($s1)
+  # direction[head1] = 1
+  addi $t0, $0, 1
+  sw $t0, 0($s1)
 
   # check collision with wall
   blt $t4, $0, collisionDownTrue1       # if (col < 0)
@@ -274,12 +278,37 @@ renderSnake:
 
   # change board at head position for snake 1
   addi $t5, $0, 1
-  lw $t4, 2000($s1)		# board position of snake1
-  sw $t5, 0($t4)		# board[snake1[head1]] = 1;
-  
+  lw $t4, 2000($s1)   # board position of snake1
+  sw $t5, 2100($t4)    # board[snake1[head1]] = 1;
 
+
+  # check if snake eats apple
+  #    if (snake1[head1] == applePosition) begin
+  #      length1 = length1 + 1;
+  #    end
+  lw $t0, 2000($s1)     # snake1[head1]
+  lw $t1, 1800($0)      # apple position
+  bne $t0, $t1, noEatApple
+  lw $t1, 1822($0)      # length of snake 1 (t1)
+  addi $t1, $t1, 1
+  sw $t1, 1822($0)
+
+  noEatApple:
+
+  # handles collision
+    #       if (isCollide1==1) begin
+    #           stage = 3;
+    #           isCollide1 = 0;
+    #       end
+    addi $t0, $0, 1
+    bne $s7, $t0, noCollision
+    addi $s0, $0, 3
+    addi $s7, $0, 0
+
+    noCollision:
 
   jr $ra
+
 
 # delay by $a0 cycles
 delay:
@@ -291,13 +320,13 @@ delay:
 
 
 displaySnake:
-  addi $t0, $0, 2100
-  addi $t1, $0, 2204
+  addi $t0, $0, 0
+  addi $t1, $0, 107
 
   displayLoop:
   
   blt $t1, $t0, returnToLoop
-    add $0, $0, $0		# loadSnake $t0
+    add $0, $0, $0    # loadSnake $t0
     addi $t0, $t0, 1
   j displayLoop
   
