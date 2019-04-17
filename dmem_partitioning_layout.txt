@@ -24,7 +24,6 @@ head1 position
 100
 
 head2 position 
-101
 
 length1
 102
