@@ -73,6 +73,9 @@ module processor(
 	 
 	 snake//, d_mw_out, o_mw_out, isLoadSnake_w_out, a_in_dx_out, b_in_dx_out
 );
+
+	output [487:0] snake;
+
     // Control signals
     input clock, reset;
 
@@ -92,8 +95,6 @@ module processor(
     output [31:0] data_writeReg;
     input [31:0] data_readRegA, data_readRegB;
 	 
-	 // changed from 226
-	 output [423:0] snake;
 	 
 	 //output [31:0] d_mw_out, o_mw_out;
 	 //output isLoadSnake_w_out;

@@ -12,7 +12,13 @@ module skeleton(resetn,
 	VGA_G,	 														//	VGA Green[9:0]
 	VGA_B,															//	VGA Blue[9:0]
 	CLOCK_50,                                          // 50 MHz clock
-	up,down,left,right, reset);  												
+	up,down,left,right, reset, debug, isCollide1);  
+
+	wire [487 : 0] snake_data;
+
+	output [31:0] debug;
+	output isCollide1;
+	assign isCollide1 = snake_data[424];
 		
 	////////////////////////	VGA	////////////////////////////
 	output			VGA_CLK;   				//	VGA Clock
@@ -98,8 +104,8 @@ module skeleton(resetn,
 	integer move1, move2;
 	
 	initial begin
-		move1 = 5;
-		move2 = 5;
+		move1 = 2;
+		move2 = 2;
 	end
 	
 	
@@ -121,8 +127,6 @@ module skeleton(resetn,
 	
 	Reset_Delay			r0	(.iCLK(CLOCK_50),.oRESET(DLY_RST)	);
 	VGA_Audio_PLL 		p1	(.areset(~DLY_RST),.inclk0(CLOCK_50),.c0(VGA_CTRL_CLK),.c1(AUD_CTRL_CLK),.c2(VGA_CLK)	);
-	
-	wire [423 : 0] snake_data;
 
 	
 	//snake2 s2 (.clock(VGA_CLK), .rstage(stage), .isDrawing(isDrawing));
@@ -182,7 +186,7 @@ module skeleton(resetn,
         data_writeReg,
         data_readRegA,
         data_readRegB,
-		  move1
+		  move1, debug
     );
 	 
 	 /** PROCESSOR **/
@@ -209,7 +213,7 @@ module skeleton(resetn,
         data_writeReg,                  // O: Data to write to for regfile
         data_readRegA,                  // I: Data from port A of regfile
         data_readRegB,                   // I: Data from port B of regfile
-		  snake_data,
+		  snake_data
     );
 
 

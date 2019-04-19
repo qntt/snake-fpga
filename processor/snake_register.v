@@ -3,7 +3,7 @@ module snake_register (value_in, index, clock, reset, enable, value_out);
 input [31:0] value_in, index;
 input clock, reset, enable;
 
-output [423:0] value_out;
+output [487:0] value_out;
 
 genvar i;
 
@@ -73,6 +73,22 @@ register snake_reg_head2 (
 	 .data_out(value_out[423:392]),
 	 .clock(clock),
 	 .ctrl_writeEnable((index == 106) && enable),
+	 .ctrl_reset(reset),
+	 .data_in(value_in)
+);
+
+register snake_reg_apple1 (
+	 .data_out(value_out[455:424]),
+	 .clock(clock),
+	 .ctrl_writeEnable((index == 107) && enable),
+	 .ctrl_reset(reset),
+	 .data_in(value_in)
+);
+
+register snake_reg_heartsTimer (
+	 .data_out(value_out[487:456]),
+	 .clock(clock),
+	 .ctrl_writeEnable((index == 108) && enable),
 	 .ctrl_reset(reset),
 	 .data_in(value_in)
 );

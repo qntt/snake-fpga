@@ -15,7 +15,9 @@ module vga_controller(iRST_n,
 							 //stage, 
 							 //isDrawing);
 
-	
+
+input [487 : 0] snake_data;							
+							
 input iRST_n;
 input iVGA_CLK;
 input up, down, left, right;
@@ -26,7 +28,6 @@ output [7:0] b_data;
 output [7:0] g_data;  
 output [7:0] r_data;     
 
-input [423 : 0] snake_data;
 
 integer counter;
 
@@ -110,6 +111,8 @@ integer head1position, head2position;
 integer currPosition;
 reg [1:0] currDirection;
 
+integer heartsTimer;
+
 // process snake's movement
 always@(posedge iVGA_CLK)
 begin
@@ -129,6 +132,8 @@ begin
 	length2 = snake_data[327:296];
 	head1 = snake_data[391:360];
 	head2 = snake_data[423:392];
+	
+	heartsTimer = snake_data[487:456];
 	
 	// 3. loop through all directions to see if the current body part has a color
 	
@@ -200,12 +205,21 @@ begin
 			end
 
 			// draw boundaries of board
-			if (addressCol == 480) begin
+			else if (addressCol == 480) begin
 				color_index = 8'd0;
 			end
-//			else begin
-//				color_index = 8'd4;
-//			end
+			// area for drawing hearts timer
+			else if (addressRow > 60 && addressRow < 80 && addressCol > 520 && addressCol < 600) begin
+				if (addressCol*100 < (600-520)*heartsTimer + 520*100) begin
+					color_index = 8'd3;
+				end
+				else begin
+					color_index = 8'd4;
+				end
+			end
+			else begin
+				color_index = 8'd4;
+			end
 		
 			
 	end

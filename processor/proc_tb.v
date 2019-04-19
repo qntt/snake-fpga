@@ -2,33 +2,16 @@
 
 module proc_tb();
 
-	 integer CYCLE_LIMIT = 500;
+	 integer CYCLE_LIMIT = 50000;
 	 
     // inputs to the proc are reg type
     reg            clock, reset;
-	 wire [359:0] snake;
-	 wire [31:0] d_mw_out, o_mw_out;
-	 wire isLoadSnake_w_out;
+	 reg [31:0] move1;
 	 
-	 wire [31:0] a_in_dx_out, b_in_dx_out;
 
-    skeleton_proc dut (clock, reset, snake, d_mw_out, o_mw_out, isLoadSnake_w_out, a_in_dx_out, b_in_dx_out);
+    skeleton_proc dut (clock, reset, move1);//, snake, d_mw_out, o_mw_out, isLoadSnake_w_out, a_in_dx_out, b_in_dx_out);
 
-    /*wire[31:0] pc = dut.my_processor.pc;
-	 wire[31:0] o_xm = dut.my_processor.o_xm;
-	 wire[31:0] b_xm = dut.my_processor.b_xm;
-	 wire[31:0] a_dx = dut.my_processor.a_dx;
-	 wire isI_x = dut.my_processor.isI_x;
-	 wire[31:0] signextend = dut.my_processor.signextend;
-	 
-	 wire[31:0] d_mw = dut.my_processor.d_mw;
-	 //wire[31:0] b_out_regfile = dut.my_processor.b_out_regfile;
-	 wire sel2 = dut.my_processor.sel2;
-
-	 wire MX1 = dut.my_processor.MX1;
-	 wire WX1 = dut.my_processor.WX1;
-	 wire MX2 = dut.my_processor.MX2;
-	 wire WX2 = dut.my_processor.WX2;
+    wire[31:0] pc = dut.my_processor.pc;
 	 
 	 wire [11:0] address_imem = dut.my_processor.address_imem;
 
@@ -43,62 +26,26 @@ module proc_tb();
 	 wire [4:0] ctrl_readRegA = dut.my_processor.ctrl_readRegA;
 	 wire [4:0] ctrl_readRegB = dut.my_processor.ctrl_readRegB;
     wire [31:0] data_writeReg = dut.my_processor.data_writeReg;
-
-	 wire [31:0] alu_out = dut.my_processor.alu_out;
-	 
-	 
-	 // branch testing
-	 wire [1:0] pc_branch_select = dut.my_processor.pc_branch_select;
-	 wire isBranch = dut.my_processor.isBranch;
-	 wire [31:0] branch_value = dut.my_processor.branch_value;
-	 wire [31:0] alu_input_1 = dut.my_processor.alu_input_1;
-	 wire [31:0] alu_input_2 = dut.my_processor.alu_input_2;
-	 
-	 wire isStillMultDiv = dut.my_processor.isStillMultDiv;
-	 //wire data_resultRDY = dut.my_processor.data_resultRDY;
-	 wire [31:0] o_in_x = dut.my_processor.o_in_x;
-	 wire isMul_x = dut.my_processor.isMul_x;
-	 wire startMultDiv = dut.my_processor.startMultDiv;
-	 wire [31:0] multdiv_result = dut.my_processor.multdiv_result;
-	 
-	 wire [31:0] data_a = dut.my_processor.md1.data_a;
-	 wire [31:0] data_b = dut.my_processor.md1.data_b;
-	 wire [31:0] result_mult = dut.my_processor.md1.data_result_mult;
-	 wire ctrl_MULT = dut.my_processor.md1.ctrl_MULT;
-	 wire data_resultRDY = dut.my_processor.md1.data_resultRDY;
-	 
-	 wire [1:0] o_in_x_sel = dut.my_processor.o_in_x_sel;
-	 
-	 wire isBex_x = dut.my_processor.isBex_x;
-	 wire bne_alu = dut.my_processor.bne_alu;
-	 wire [1:0] sel_alu_input1 = dut.my_processor.sel_alu_input1;
-	 
-	 
-	 //wire data_writeReg = dut.data_writeReg;
-	 wire a_out_regfile = dut.my_processor.a_out_regfile;
-	 wire b_out_regfile = dut.my_processor.b_out_regfile;
-	 wire match_write_rs = dut.my_processor.match_write_rs;
-	 wire isLoadToALU = dut.my_processor.isLoadToALU;
-	 
-	 //wire [63:0] snake = dut.my_processor.snake;
-	 wire [31:0] o_mw = dut.my_processor.o_mw;
-	 wire isLoadSnake_w = dut.my_processor.isLoadSnake_w;
-	 
-	 wire [11:0] address_dmem_fromVGA;
-	 wire [31:0] data_fromVGA;
-	 wire wren_fromVGA;
-	 wire [31:0] q_dmem_toVGA;
-	 
-	 //wire [10*32-1 : 0] snake_data;
 	 
 	 wire isLW_x = dut.my_processor.isLW_x;
 	 wire [31:0] ir_dx = dut.my_processor.ir_dx;
 	 wire [31:0] ir_xm = dut.my_processor.ir_xm;
 	 
-	 wire [359:0] snake = dut.my_processor.snake;
+	 wire [455:0] snake = dut.my_processor.snake;
 	 wire [1:0] dir1 = snake[1:0];
 	 wire [31:0] head1 = snake[231:200];
-	 wire [31:0] stage = snake[359:328];*/
+	 wire [31:0] stage = snake[359:328];
+	 
+	 wire [31:0] s7 = dut.my_regfile.read_output[32*(23+1)-1: 32*23];
+	 
+	 wire isBranch = dut.my_processor.isBranch;
+	 wire [31:0] branch_value = dut.my_processor.branch_value;
+	 
+	 wire isB1 = dut.my_processor.isBranch1;
+	 wire isB2 = dut.my_processor.isBranch2;
+	 wire isB3 = dut.my_processor.isBranch3;
+	 wire isB4 = dut.my_processor.isBranch4;
+	 
 	
 	 
     initial
@@ -106,7 +53,14 @@ module proc_tb();
         $display($time, "<< Starting the Simulation >>");
         clock = 1'b0;    // at time 0
 		  
-		  $monitor("clock: %d, snake: %d, d_mw: %d, o_mw: %d, isLoadSnake: %b", clock, snake, d_mw_out, o_mw_out, isLoadSnake_w_out, a_in_dx_out, b_in_dx_out);
+		  move1 = 32'd2;
+		  
+		  // processor output monitor
+		  $monitor("pc: %d, ctrl_readRegA: %d, ctrl_readRegB: %d, data_writeReg: %d, ctrl_writeReg: %d, ctrl_writeEnable: %d, address_dmem: %d, data: %d, wren: %d, s7: %d", 
+		  pc, ctrl_readRegA, ctrl_readRegB, data_writeReg, ctrl_writeReg, ctrl_writeEnable, address_dmem, data, wren, s7);
+		  
+		  
+		  //$monitor("clock: %d, snake: %d, d_mw: %d, o_mw: %d, isLoadSnake: %b", clock, snake, d_mw_out, o_mw_out, isLoadSnake_w_out, a_in_dx_out, b_in_dx_out);
 		  
 		  // processor output monitor
 		  //$monitor("pc: %d, data_writeReg: %d, ctrl_writeReg: %d, ctrl_writeEnable: %d, address_dmem: %d, data: %d, wren: %d, dir1: %b, head1: %d, isLoadSnake_w: %b, stage: %d, d_mw: %d, o_mw: %d, d_mw(binary): %b", 
@@ -161,6 +115,9 @@ module proc_tb();
 
         $stop;
     end
+	 
+	 always
+		#1000 move1 = 3;
 
     // Clock generator
     always

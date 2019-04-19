@@ -9,14 +9,12 @@
  * inspect which signals the processor tries to assert when.
  */
 
-module skeleton_proc(clock, reset, snake_data, d_mw_out, o_mw_out, isLoadSnake_w_out, a_in_dx_out, b_in_dx_out);
+module skeleton_proc(clock, reset, move1);
     input clock, reset;
 	 
-	 output [359 : 0] snake_data;
-	 output [31:0] d_mw_out, o_mw_out;
-	 output isLoadSnake_w_out;
+	 wire [455 : 0] snake_data;
+	 input [31:0] move1;
 	 
-	 output [31:0] a_in_dx_out, b_in_dx_out;
 
     /** IMEM **/
     // Figure out how to generate a Quartus syncram component and commit the generated verilog file.
@@ -59,7 +57,8 @@ module skeleton_proc(clock, reset, snake_data, d_mw_out, o_mw_out, isLoadSnake_w
         ctrl_readRegB,
         data_writeReg,
         data_readRegA,
-        data_readRegB
+        data_readRegB,
+		  move1
     );
 
     /** PROCESSOR **/
@@ -86,7 +85,7 @@ module skeleton_proc(clock, reset, snake_data, d_mw_out, o_mw_out, isLoadSnake_w
         data_writeReg,                  // O: Data to write to for regfile
         data_readRegA,                  // I: Data from port A of regfile
         data_readRegB,                   // I: Data from port B of regfile
-		  snake_data, d_mw_out, o_mw_out, isLoadSnake_w_out, a_in_dx_out, b_in_dx_out
+		  snake_data
     );
 
 endmodule

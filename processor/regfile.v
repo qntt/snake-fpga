@@ -4,7 +4,7 @@ module regfile (
     ctrl_reset, ctrl_writeReg,
     ctrl_readRegA, ctrl_readRegB, data_writeReg,
     data_readRegA, data_readRegB,
-	 move1
+	 move1, debug
 );
 
    input clock, ctrl_writeEnable, ctrl_reset;
@@ -12,6 +12,7 @@ module regfile (
    input [31:0] data_writeReg;
 	
 	input [31:0] move1;
+	output [31:0] debug;
 
    output [31:0] data_readRegA, data_readRegB;
 
@@ -95,6 +96,8 @@ module regfile (
 				 .data_in(move1)
 			);
 	endgenerate
+	
+	assign debug = read_output[32*(1+1)-1: 32*1];
 	
 	generate
 		for (i=0; i<32; i = i+1) begin: gen2

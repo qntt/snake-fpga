@@ -43,6 +43,9 @@ head2 pointer
 apple
 107
 
+hearts timer
+108
+
 =======================================
 Snake arrays
 
@@ -106,6 +109,41 @@ Outputs of processor to dmem (currently not used)
 1840: isDrawing
 1841: stage
 1842: 
+
+==========================================
+Powerups:
+
+isDoubleSpeed (1 bit) - Player 1
+1850
+
+Double-speed Timer - Player 1
+1851
+
+isDoubleSpeed (1 bit) - Player 2
+1852
+
+Double-speed Timer - Player 2
+1853
+
+isInvinsible (1 bit) - Player 1
+1854
+
+Invincibility timer - Player 1
+1855
+
+isInvinsible (1 bit) - Player 2
+1856
+
+Invincibility timer - Player 2
+1857
+
+
+Hearts timer - Player 1
+1858
+
+Hearts timer - Player 2
+1859
+
 
 ==========================================
 Store the board position of every snake body part

@@ -4,7 +4,8 @@
 # s5: direction player 1
 # s6: direction player 2
 
-# TODO: set stage 3 when collide1 is true
+## Clear DMEM
+jal clearDMEM
 
 addi $s0, $0, 1
 
@@ -19,7 +20,7 @@ loop:
     bne $s0, $t0, endloop
 
   stage2:
-    jal renderSnake
+    jal moveSnake
 
   #### BEGIN DRAWING ON VGA
   # save head positions
@@ -41,19 +42,28 @@ loop:
   sw $s1, 105($0)
   sw $s2, 106($0)
 
+  # save collision
+  sw $s7, 107($0)
+
   jal displaySnake
 
-  # delay by 5M cycles
+  # delay by 500k cycles
   addi $t0, $0, 5000
   addi $t1, $0, 500
   mul $t1, $t0, $t1
   add $a0, $0, $t1
   jal delay
 
+  # TODO: remove this line; it resets the collision
+  #addi $s7, $0, 0
+
   endloop:
     j loop
 
 init:
+	## Clear DMEM
+	jal clearDMEM
+
   # define apple locations (10,25)
   addi $t1, $0, 425
   sw $t1, 1800($0)
@@ -76,9 +86,10 @@ init:
 
   # initialize the board
   addi $t0, $0, 1
-  sw $t0, 822($0)
-  sw $t0, 821($0)
-  sw $t0, 820($0)
+  addi $t1, $0, 820
+  sw $t0, 2100($t1)
+  sw $t0, 2101($t1)
+  sw $t0, 2102($t1)
 
   # initialize the board position of snake parts
   addi $t0, $0, 820
@@ -98,13 +109,12 @@ init:
   sw $t2, 1822($0)
 
   # define initial direction of snakes
-  addi $s5, $0, 2
-  addi $s6, $0, 2
+  #addi $s5, $0, 2
+  #addi $s6, $0, 2
 
   # reset the score
-  addi $t2, $0, 1820
-  sw $0, 0($t2)
-  sw $0, 1($t2)
+  sw $0, 1820($0)
+  sw $0, 1821($0)
 
   # set stage to 2
   addi $s0, $0, 2
@@ -112,16 +122,19 @@ init:
   jr $ra
 
 
-renderSnake:
+moveSnake:
+	lw $t0, 1600($s1)
+	add $1, $t0, $0
+
   # length of snake 1 (t1)
   lw $t1, 1822($0)
-  # tail of snake 1 (t2) 
+  # tail of snake 1 (t2)
   add $t2, $s1, $t1             # tail1 = head1 + length1
   addi $t0, $0, 1
   sub $t2, $t2, $t0             # tail1 = tail1 - 1
   
   # tail may wrap over array (update if tail1 >= 50) (t2)
-  addi $t0, $0, 49
+  addi $t0, $0, 50
   blt $t2, $t0, skipUpdateTail1
   addi $t0, $0, 50
   sub $t2, $t2, $t0             # tail1 = tail1 - 50
@@ -158,6 +171,7 @@ renderSnake:
   addi $t2, $0, 1
   sub $t4, $t0, $t2                 # row = row - 1
   sw $t4, 1600($s1)
+  sw $t1, 1650($s1)
 
   # board position changes by -40
   addi $t5, $0, 40
@@ -190,6 +204,7 @@ renderSnake:
   addi $t2, $0, 1
   add $t4, $t1, $t2                 # col = col + 1
   sw $t4, 1650($s1)
+  sw $t0, 1600($s1)
 
   # board position changes by 1
   addi $t5, $0, 1
@@ -223,6 +238,7 @@ renderSnake:
   addi $t2, $0, 1
   add $t4, $t0, $t2                 # row = row + 1
   sw $t4, 1600($s1)
+  sw $t1, 1650($s1)
 
   # board position changes by +40
   addi $t5, $0, 40
@@ -256,6 +272,7 @@ renderSnake:
   addi $t2, $0, 1
   sub $t4, $t1, $t2                 # col = col - 1
   sw $t4, 1650($s1)
+  sw $t0, 1600($s1)
 
   # board position changes by -1
   addi $t5, $0, 1
@@ -276,36 +293,74 @@ renderSnake:
 
   notMoveLeft:
 
-  # change board at head position for snake 1
-  addi $t5, $0, 1
-  lw $t4, 2000($s1)   # board position of snake1
-  sw $t5, 2100($t4)    # board[snake1[head1]] = 1;
-
-
   # check if snake eats apple
   #    if (snake1[head1] == applePosition) begin
   #      length1 = length1 + 1;
   #    end
-  lw $t0, 2000($s1)     # snake1[head1]
-  lw $t1, 1800($0)      # apple position
+  lw $t0, 2000($s1)		# snake1[head1]
+  lw $t1, 1800($0)		# apple position
   bne $t0, $t1, noEatApple
-  lw $t1, 1822($0)      # length of snake 1 (t1)
+  lw $t1, 1822($0)		# length of snake 1 (t1)
   addi $t1, $t1, 1
   sw $t1, 1822($0)
 
   noEatApple:
 
-  # handles collision
-    #       if (isCollide1==1) begin
-    #           stage = 3;
-    #           isCollide1 = 0;
-    #       end
-    addi $t0, $0, 1
-    bne $s7, $t0, noCollision
-    addi $s0, $0, 3
-    addi $s7, $0, 0
+  # checks for self-collision or collision with other snake
+  # if (isCollide1 == 0) {
+  # 	int boardValue = board[snake1[head1]];
+  # 	if (boardValue==1 || boardValue==2) {
+  # 		isCollide1 = 1;
+  # 	}
+  # 	else {
+  # 		board[snake1[head1]] = 1;
+  # 	}
+  # }
+  beginCheckSelfCollision:
 
-    noCollision:
+  addi $t0, $0, 0
+  bne $s7, $t0, endCheckSelfCollision		# branch because if isCollide1 is already 1, then no need to check for self-collisions
+  # at this point means isCollide=0, need to check for self-collisions
+
+	checkSelfCollision:
+  lw $t0, 2000($s1)		# snake1[head1]
+  lw $t1, 2100($t0)		# boardValue
+
+  addi $t0, $0, 1
+  bne $t1, $t0, checkCollisionOtherSnake
+  # at this point means there is self-collision
+  addi $s7, $0, 1
+
+  j endCheckSelfCollision
+
+  checkCollisionOtherSnake:
+  addi $t0, $0, 2
+  bne $t1, $t0, checkSelfCollisionNoCollisions
+  # at this point means snake1 is colliding with snake2
+  addi $s7, $0, 1
+
+  j endCheckSelfCollision
+
+  checkSelfCollisionNoCollisions:
+  # at this point means snake1 is not colliding with snake2 and no self-collisions
+  # set board value at this point to 1
+  addi $t0, $0, 1
+  lw $t1, 2000($s1)
+  sw $t0, 2100($t1)
+
+  endCheckSelfCollision:
+
+  # handles collision
+ 	#		if (isCollide1==1) begin
+	#			stage = 3;
+	#			isCollide1 = 0;
+	#		end
+	addi $t0, $0, 1
+	bne $s7, $t0, noCollision
+	addi $s0, $0, 3
+	addi $s7, $0, 0
+
+	noCollision:
 
   jr $ra
 
@@ -332,3 +387,14 @@ displaySnake:
   
   returnToLoop:
   jr $ra
+
+clearDMEM:
+	addi $t0, $0, 0
+	addi $t1, $0, 4096
+	startClearDMEMLoop:
+		blt $t1, $t0, endClearDMEMLoop
+		sw $0, 0($t0)
+		addi $t0, $t0, 1
+	endClearDMEMLoop:
+	jr $ra
+
